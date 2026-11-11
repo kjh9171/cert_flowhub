@@ -1,11 +1,10 @@
 "use client";
 
-// FlowHub 글로벌 검색 (Cmd+K)
-
 import React, { useEffect, useState, useRef } from "react";
 import { Search, X, FileText, CheckSquare, MessageSquare, File } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Modal } from "@/components/ui/Modal";
+import api from "@/lib/api";
 
 interface SearchResult {
   id: string;
@@ -14,27 +13,6 @@ interface SearchResult {
   snippet: string;
 }
 
-const mockResults: SearchResult[] = [
-  { id: "1", type: "task", title: "로그인 페이지 UI 구현", snippet: "Next.js App Router 기반 로그인 화면" },
-  { id: "2", type: "document", title: "FlowHub 아키텍처 가이드", snippet: "시스템 구조 및 디렉토리 설계" },
-  { id: "3", type: "feed", title: "프로젝트 킥오프 공지", snippet: "FlowHub 개발 시작합니다" },
-  { id: "4", type: "file", title: "schema.prisma", snippet: "Prisma 스키마 정의 파일" },
-];
-
-const typeIcon: Record<SearchResult["type"], React.ComponentType<{ className?: string }>> = {
-  task: CheckSquare,
-  document: FileText,
-  feed: MessageSquare,
-  file: File,
-};
-
-const typeLabel: Record<SearchResult["type"], string> = {
-  task: "작업",
-  document: "문서",
-  feed: "피드",
-  file: "파일",
-};
-
 interface GlobalSearchProps {
   open: boolean;
   onClose: () => void;
@@ -42,38 +20,66 @@ interface GlobalSearchProps {
 
 export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
   const [query, setQuery] = useState("");
-  const [tab, setTab] = useState<"all" | SearchResult["type"]>("all");
+  const [tab, setTab] = useState<"all" | "task" | "document" | "feed">("all");
+  const [results, setResults] = useState<SearchResult[]>([]);
+  const [loading, setLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (open) {
       setQuery("");
+      setResults([]);
       setTimeout(() => inputRef.current?.focus(), 50);
     }
   }, [open]);
 
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
-        e.preventDefault();
+    if (!open) return;
+    const t = setTimeout(async () => {
+      if (!query.trim()) {
+        setResults([]);
+        return;
       }
-    };
-    document.addEventListener("keydown", handler);
-    return () => document.removeEventListener("keydown", handler);
-  }, []);
+      setLoading(true);
+      try {
+        const res = await api.get("/search", { params: { q: query } });
+        const data = res.data || {};
+        const mapped: SearchResult[] = [
+          ...(data.tasks || []).map((t: any) => ({ id: t.id, type: "task" as const, title: t.title, snippet: t.status })),
+          ...(data.articles || []).map((a: any) => ({ id: a.id, type: "document" as const, title: a.title, snippet: a.category || a.visibility })),
+          ...(data.posts || []).map((p: any) => ({ id: p.id, type: "feed" as const, title: p.title || "피드", snippet: p.type })),
+        ];
+        setResults(mapped);
+      } catch {
+        setResults([]);
+      } finally {
+        setLoading(false);
+      }
+    }, 300);
+    return () => clearTimeout(t);
+  }, [query, open]);
 
-  const filtered = mockResults.filter((r) => {
-    if (tab !== "all" && r.type !== tab) return false;
-    if (!query) return true;
-    return r.title.toLowerCase().includes(query.toLowerCase()) || r.snippet.toLowerCase().includes(query.toLowerCase());
-  });
+  const filtered = tab === "all" ? results : results.filter((r) => r.type === tab);
 
-  const tabs: { key: "all" | SearchResult["type"]; label: string }[] = [
+  const typeIcon: Record<SearchResult["type"], React.ComponentType<{ className?: string }>> = {
+    task: CheckSquare,
+    document: FileText,
+    feed: MessageSquare,
+    file: File,
+  };
+
+  const typeLabel: Record<SearchResult["type"], string> = {
+    task: "작업",
+    document: "문서",
+    feed: "피드",
+    file: "파일",
+  };
+
+  const tabs: { key: "all" | "task" | "document" | "feed"; label: string }[] = [
     { key: "all", label: "전체" },
     { key: "task", label: "작업" },
     { key: "document", label: "문서" },
     { key: "feed", label: "피드" },
-    { key: "file", label: "파일" },
   ];
 
   return (
@@ -85,7 +91,7 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
             ref={inputRef}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="작업, 문서, 피드, 파일 검색..."
+            placeholder="작업, 문서, 피드 검색..."
             className="flex-1 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none"
           />
           <button onClick={onClose} className="text-slate-400 hover:text-slate-600">
@@ -109,8 +115,12 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
         </div>
 
         <div className="max-h-80 overflow-y-auto p-2">
-          {filtered.length === 0 ? (
-            <div className="py-8 text-center text-sm text-slate-400">검색 결과가 없습니다.</div>
+          {loading ? (
+            <div className="py-8 text-center text-sm text-slate-400">검색 중...</div>
+          ) : filtered.length === 0 ? (
+            <div className="py-8 text-center text-sm text-slate-400">
+              {query ? "검색 결과가 없습니다." : "검색어를 입력하세요."}
+            </div>
           ) : (
             filtered.map((r) => {
               const Icon = typeIcon[r.type];
@@ -139,7 +149,7 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
         </div>
 
         <div className="border-t border-slate-100 px-4 py-2 text-[11px] text-slate-400">
-          ↑↓ 이동 · Enter 선택 · Esc 닫기
+          검색어 입력 시 자동 검색 · Esc 닫기
         </div>
       </div>
     </Modal>

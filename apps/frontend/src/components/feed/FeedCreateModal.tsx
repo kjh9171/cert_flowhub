@@ -1,0 +1,105 @@
+"use client";
+
+import React, { useEffect, useState } from "react";
+import api from "@/lib/api";
+import { Modal } from "@/components/ui/Modal";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import type { FeedPostType } from "@/types";
+
+interface FeedCreateModalProps {
+  open: boolean;
+  onClose: () => void;
+  onCreated?: () => void;
+}
+
+export function FeedCreateModal({ open, onClose, onCreated }: FeedCreateModalProps) {
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
+  const [type, setType] = useState<FeedPostType>("SHARE");
+  const [workspaceId, setWorkspaceId] = useState("");
+  const [projectId, setProjectId] = useState("");
+  const [workspaces, setWorkspaces] = useState<any[]>([]);
+  const [projects, setProjects] = useState<any[]>([]);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (!open) return;
+    (async () => {
+      try {
+        const [w, p] = await Promise.all([api.get("/workspaces"), api.get("/projects")]);
+        setWorkspaces(w.data || []);
+        setProjects(p.data || []);
+        if (w.data?.[0]) setWorkspaceId(w.data[0].id);
+      } catch {
+        /* ignore */
+      }
+    })();
+  }, [open]);
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!content.trim()) { setError("내용은 필수입니다."); return; }
+    if (!workspaceId) { setError("워크스페이스가 필요합니다."); return; }
+    setSaving(true);
+    setError("");
+    try {
+      await api.post("/feed", { workspaceId, projectId: projectId || undefined, type, title: title || undefined, content });
+      setTitle(""); setContent(""); setType("SHARE");
+      onCreated?.();
+      onClose();
+    } catch (err: any) {
+      setError(err?.response?.data?.message || "작성 실패");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Modal open={open} onClose={onClose} title="글 작성">
+      <form onSubmit={submit} className="space-y-3">
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-medium text-slate-600">유형</label>
+          <select value={type} onChange={(e) => setType(e.target.value as FeedPostType)} className="h-9 rounded-md border border-slate-200 px-3 text-sm">
+            <option value="REQUEST">요청</option>
+            <option value="TASK">업무</option>
+            <option value="JOURNAL">일지</option>
+            <option value="SHARE">공유</option>
+            <option value="ANNOUNCEMENT">공지</option>
+          </select>
+        </div>
+        <Input label="제목 (선택)" value={title} onChange={(e) => setTitle(e.target.value)} />
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-medium text-slate-600">내용 (Markdown)</label>
+          <textarea
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            className="min-h-[120px] rounded-md border border-slate-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+            required
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-medium text-slate-600">워크스페이스</label>
+            <select value={workspaceId} onChange={(e) => setWorkspaceId(e.target.value)} className="h-9 rounded-md border border-slate-200 px-3 text-sm">
+              {workspaces.map((w) => <option key={w.id} value={w.id}>{w.name}</option>)}
+            </select>
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-medium text-slate-600">프로젝트 (선택)</label>
+            <select value={projectId} onChange={(e) => setProjectId(e.target.value)} className="h-9 rounded-md border border-slate-200 px-3 text-sm">
+              <option value="">(없음)</option>
+              {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+            </select>
+          </div>
+        </div>
+        {error && <p className="text-sm text-red-600">{error}</p>}
+        <div className="flex justify-end gap-2 pt-2">
+          <Button type="button" variant="secondary" onClick={onClose}>취소</Button>
+          <Button type="submit" disabled={saving}>{saving ? "작성 중..." : "작성"}</Button>
+        </div>
+      </form>
+    </Modal>
+  );
+}

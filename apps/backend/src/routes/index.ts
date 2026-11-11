@@ -10,6 +10,7 @@ import feedRoutes from "../modules/feed/feed.routes";
 import knowledgeRoutes from "../modules/knowledge/knowledge.routes";
 import integrationRoutes from "../modules/integration/integration.routes";
 import notificationRoutes from "../modules/notification/notification.routes";
+import searchRoutes from "../modules/search/search.routes";
 
 const router = Router();
 
@@ -22,5 +23,6 @@ router.use("/feed", feedRoutes);
 router.use("/knowledge", knowledgeRoutes);
 router.use("/integrations", integrationRoutes);
 router.use("/notifications", notificationRoutes);
+router.use("/search", searchRoutes);
 
 export default router;

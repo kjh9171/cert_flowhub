@@ -1,25 +1,38 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import api from "@/lib/api";
 import { FeedPostCard } from "@/components/feed/FeedPostCard";
+import { FeedCreateModal } from "@/components/feed/FeedCreateModal";
 import { Button } from "@/components/ui/Button";
 import { Plus } from "lucide-react";
 import type { FeedPost, FeedPostType, User } from "@/types";
 
-const mockUsers: Record<string, User> = {
-  u1: { id: "u1", name: "홍길동", email: "hong@flowhub.local", role: "ADMIN", status: "ONLINE" },
-  u2: { id: "u2", name: "김철수", email: "kim@flowhub.local", role: "MEMBER", status: "BUSY" },
-};
-
-const initialPosts: FeedPost[] = [
-  { id: "fp1", workspaceId: "w1", authorId: "u1", type: "ANNOUNCEMENT", title: "FlowHub 개발 킥오프", content: "## 환영합니다\nFlowHub 개발을 시작합니다.", isPinned: true, createdAt: "2026-11-10T09:00:00Z" },
-  { id: "fp2", workspaceId: "w1", projectId: "p1", authorId: "u2", type: "SHARE", content: "Prisma 스키마 초안 공유합니다.", isPinned: false, createdAt: "2026-11-09T14:30:00Z" },
-  { id: "fp3", workspaceId: "w1", authorId: "u1", type: "JOURNAL", content: "오늘 작업: 간트 차트 컴포넌트 구현 완료.", isPinned: false, createdAt: "2026-11-08T18:00:00Z" },
-];
-
 export default function FeedPage() {
-  const [posts] = useState(initialPosts);
+  const [posts, setPosts] = useState<FeedPost[]>([]);
+  const [users, setUsers] = useState<Record<string, User>>({});
   const [filter, setFilter] = useState<FeedPostType | "ALL">("ALL");
+  const [modalOpen, setModalOpen] = useState(false);
+
+  const load = async () => {
+    try {
+      const res = await api.get("/feed");
+      const data = res.data || [];
+      setPosts(data);
+      // use embedded author from API response
+      const map: Record<string, User> = {};
+      data.forEach((p: any) => {
+        if (p.author) map[p.authorId] = p.author;
+      });
+      setUsers((prev) => ({ ...prev, ...map }));
+    } catch {
+      /* keep empty */
+    }
+  };
+
+  useEffect(() => {
+    load();
+  }, []);
 
   const filtered = filter === "ALL" ? posts : posts.filter((p) => p.type === filter);
 
@@ -36,7 +49,7 @@ export default function FeedPage() {
     <div className="mx-auto max-w-3xl p-6 space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-slate-900">피드</h1>
-        <Button size="sm">
+        <Button size="sm" onClick={() => setModalOpen(true)}>
           <Plus className="h-4 w-4" /> 글 작성
         </Button>
       </div>
@@ -54,10 +67,15 @@ export default function FeedPage() {
       </div>
 
       <div className="space-y-4">
-        {filtered.map((p) => (
-          <FeedPostCard key={p.id} post={p} author={mockUsers[p.authorId]} />
+        {filtered.map((p: any) => (
+          <FeedPostCard key={p.id} post={p} author={users[p.authorId] || p.author} />
         ))}
+        {filtered.length === 0 && (
+          <p className="text-center text-sm text-slate-400 py-8">게시글이 없습니다.</p>
+        )}
       </div>
+
+      <FeedCreateModal open={modalOpen} onClose={() => setModalOpen(false)} onCreated={load} />
     </div>
   );
 }

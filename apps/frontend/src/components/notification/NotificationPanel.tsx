@@ -1,26 +1,48 @@
 "use client";
 
-// FlowHub 알림 패널
-
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import api from "@/lib/api";
 import { X, CheckCheck, Bell } from "lucide-react";
 import { cn, formatDate } from "@/lib/utils";
 import type { Notification } from "@/types";
-
-const mockNotifications: Notification[] = [
-  { id: "n1", userId: "u1", type: "TASK_ASSIGNED", title: "새 작업이 할당되었습니다", body: "로그인 페이지 UI 구현", isRead: false, createdAt: "2026-11-10T09:00:00Z" },
-  { id: "n2", userId: "u1", type: "FEED_MENTION", title: "멘션되었습니다", body: "@홍길동 확인 부탁드립니다", isRead: false, createdAt: "2026-11-09T14:00:00Z" },
-  { id: "n3", userId: "u1", type: "INTEGRATION", title: "CI/CD 파이프라인 실패", body: "build #42 실패", isRead: true, createdAt: "2026-11-08T11:00:00Z" },
-];
 
 interface NotificationPanelProps {
   onClose: () => void;
 }
 
 export function NotificationPanel({ onClose }: NotificationPanelProps) {
-  const [items, setItems] = useState(mockNotifications);
+  const [items, setItems] = useState<Notification[]>([]);
 
-  const markAllRead = () => setItems((prev) => prev.map((n) => ({ ...n, isRead: true })));
+  const load = async () => {
+    try {
+      const res = await api.get("/notifications");
+      setItems(res.data || []);
+    } catch {
+      /* ignore */
+    }
+  };
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  const markRead = async (id: string) => {
+    try {
+      await api.patch(`/notifications/${id}/read`);
+      setItems((prev) => prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)));
+    } catch {
+      /* ignore */
+    }
+  };
+
+  const markAllRead = async () => {
+    try {
+      await api.post("/notifications/read-all");
+      setItems((prev) => prev.map((n) => ({ ...n, isRead: true })));
+    } catch {
+      /* ignore */
+    }
+  };
 
   return (
     <div className="fixed right-4 top-16 z-50 w-80 rounded-lg border border-slate-200 bg-white shadow-xl">
@@ -45,8 +67,9 @@ export function NotificationPanel({ onClose }: NotificationPanelProps) {
           items.map((n) => (
             <div
               key={n.id}
+              onClick={() => !n.isRead && markRead(n.id)}
               className={cn(
-                "border-b border-slate-100 px-4 py-3 hover:bg-slate-50",
+                "border-b border-slate-100 px-4 py-3 hover:bg-slate-50 cursor-pointer",
                 !n.isRead && "bg-blue-50/50"
               )}
             >

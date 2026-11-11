@@ -5,6 +5,7 @@
 import React, { useState } from "react";
 import { Search, Bell, ChevronDown, Globe } from "lucide-react";
 import { cn } from "@/lib/utils";
+import api from "@/lib/api";
 import { UserStatusBadge } from "@/components/badge/UserStatusBadge";
 import { IntegrationBadge } from "@/components/badge/IntegrationBadge";
 import { useUserStore } from "@/stores/userStore";
@@ -86,7 +87,10 @@ export function Topbar({ onSearchOpen, onNotificationOpen, unreadCount = 0 }: To
           <UserStatusBadge
             status={currentUser.status}
             interactive
-            onChange={(s: UserStatus) => setStatus(s)}
+            onChange={(s: UserStatus) => {
+              setStatus(s);
+              api.patch("/users/me/status", { status: s }).catch(() => {});
+            }}
           />
         )}
 

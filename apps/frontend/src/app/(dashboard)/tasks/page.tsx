@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useTaskStore } from "@/stores/taskStore";
 import { useLayoutStore } from "@/stores/layoutStore";
 import { ViewSwitcher } from "@/components/common/ViewSwitcher";
@@ -9,15 +9,21 @@ import { GanttChart, GanttLegend } from "@/components/gantt/GanttChart";
 import { CalendarView } from "@/components/calendar/CalendarView";
 import { Button } from "@/components/ui/Button";
 import { Plus } from "lucide-react";
+import { TaskCreateModal } from "@/components/task/TaskCreateModal";
+import { TaskDetailPanel } from "@/components/task/TaskDetailPanel";
 
 export default function TasksPage() {
   const { tasks, view, setView, loadTasks, subscribeSocket } = useTaskStore();
+  const { openRightPanel } = useLayoutStore();
+  const [modalOpen, setModalOpen] = useState(false);
+
   useEffect(() => {
     loadTasks();
     const unsub = subscribeSocket();
     return unsub;
   }, [loadTasks, subscribeSocket]);
-  const { openRightPanel } = useLayoutStore();
+
+  const reload = () => loadTasks();
 
   return (
     <div className="p-6 space-y-4">
@@ -28,7 +34,7 @@ export default function TasksPage() {
         </div>
         <div className="flex items-center gap-2">
           <ViewSwitcher value={view} onChange={setView} />
-          <Button size="sm">
+          <Button size="sm" onClick={() => setModalOpen(true)}>
             <Plus className="h-4 w-4" /> 새 작업
           </Button>
         </div>
@@ -39,25 +45,34 @@ export default function TasksPage() {
           tasks={tasks}
           onStatusChange={(id, status) => useTaskStore.getState().moveTaskStatus(id, status)}
           onTaskClick={(t) =>
-            openRightPanel(
-              <div className="space-y-2">
-                <h3 className="text-base font-semibold">{t.title}</h3>
-                <p className="text-sm text-slate-600">{t.content}</p>
-              </div>
-            )
+            openRightPanel(<TaskDetailPanel task={t} onUpdated={reload} />)
           }
         />
       )}
       {view === "GANTT" && (
         <div className="space-y-3">
           <GanttLegend />
-          <GanttChart tasks={tasks} />
+          <GanttChart
+            tasks={tasks}
+            onTaskClick={(t) =>
+              openRightPanel(<TaskDetailPanel task={t} onUpdated={reload} />)
+            }
+          />
         </div>
       )}
-      {view === "CALENDAR" && <CalendarView tasks={tasks} />}
+      {view === "CALENDAR" && (
+        <CalendarView
+          tasks={tasks}
+          onTaskClick={(t) =>
+            openRightPanel(<TaskDetailPanel task={t} onUpdated={reload} />)
+          }
+        />
+      )}
       {view === "FEED" && (
         <p className="text-sm text-slate-400">피드 뷰는 대시보드에서 확인하세요.</p>
       )}
+
+      <TaskCreateModal open={modalOpen} onClose={() => setModalOpen(false)} onCreated={reload} />
     </div>
   );
 }

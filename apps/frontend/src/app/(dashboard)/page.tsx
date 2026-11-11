@@ -2,8 +2,9 @@
 
 // FlowHub 대시보드 홈
 
-import React, { useEffect } from "react";
-import { LayoutDashboard, Kanban, BookOpen, Users, Bell, CheckCircle2 } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { LayoutDashboard, Kanban, BookOpen, Users, Bell, CheckCircle2, Plus } from "lucide-react";
+import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 import { useTaskStore } from "@/stores/taskStore";
 import { useUserStore } from "@/stores/userStore";
@@ -15,6 +16,8 @@ import { KanbanBoard } from "@/components/kanban/KanbanBoard";
 import { CalendarView } from "@/components/calendar/CalendarView";
 import { FeedPostCard } from "@/components/feed/FeedPostCard";
 import { useLayoutStore } from "@/stores/layoutStore";
+import { TaskCreateModal } from "@/components/task/TaskCreateModal";
+import { TaskDetailPanel } from "@/components/task/TaskDetailPanel";
 import type { FeedPost, User } from "@/types";
 
 const mockPosts: FeedPost[] = [
@@ -54,6 +57,8 @@ export default function DashboardPage() {
   }, [loadTasks, subscribeSocket]);
   const { currentUser } = useUserStore();
   const { openRightPanel } = useLayoutStore();
+  const [modalOpen, setModalOpen] = useState(false);
+  const reload = () => loadTasks();
 
   const stats = [
     { label: "진행 중 작업", value: tasks.filter((t) => t.status === "IN_PROGRESS").length, icon: Kanban, color: "text-blue-600" },
@@ -75,6 +80,9 @@ export default function DashboardPage() {
         <div className="flex items-center gap-3">
           {currentUser && <UserStatusBadge status={currentUser.status} showLabel />}
           <IntegrationBadge status="IN_PROGRESS" eventType="CI_CD" title="CI/CD 빌드" />
+          <Button size="sm" onClick={() => setModalOpen(true)}>
+            <Plus className="h-4 w-4" /> 새 작업
+          </Button>
         </div>
       </div>
 
@@ -103,13 +111,7 @@ export default function DashboardPage() {
           tasks={tasks}
           onStatusChange={(id, status) => useTaskStore.getState().moveTaskStatus(id, status)}
           onTaskClick={(t) =>
-            openRightPanel(
-              <div className="space-y-3">
-                <h3 className="text-base font-semibold text-slate-900">{t.title}</h3>
-                <p className="text-sm text-slate-600">{t.content}</p>
-                <div className="text-xs text-slate-400">진행률: {t.progress}%</div>
-              </div>
-            )
+            openRightPanel(<TaskDetailPanel task={t} onUpdated={reload} />)
           }
         />
       )}
@@ -119,12 +121,7 @@ export default function DashboardPage() {
           <GanttChart
             tasks={tasks}
             onTaskClick={(t) =>
-              openRightPanel(
-                <div className="space-y-3">
-                  <h3 className="text-base font-semibold text-slate-900">{t.title}</h3>
-                  <p className="text-sm text-slate-600">{t.content}</p>
-                </div>
-              )
+              openRightPanel(<TaskDetailPanel task={t} onUpdated={reload} />)
             }
           />
         </div>
@@ -133,12 +130,7 @@ export default function DashboardPage() {
         <CalendarView
           tasks={tasks}
           onTaskClick={(t) =>
-            openRightPanel(
-              <div className="space-y-3">
-                <h3 className="text-base font-semibold text-slate-900">{t.title}</h3>
-                <p className="text-sm text-slate-600">{t.content}</p>
-              </div>
-            )
+            openRightPanel(<TaskDetailPanel task={t} onUpdated={reload} />)
           }
         />
       )}
@@ -161,6 +153,7 @@ export default function DashboardPage() {
           </div>
         </section>
       )}
+      <TaskCreateModal open={modalOpen} onClose={() => setModalOpen(false)} onCreated={reload} />
     </div>
   );
 }

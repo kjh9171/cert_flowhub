@@ -104,9 +104,11 @@ export function GanttChart({ tasks, onTaskClick }: GanttChartProps) {
             const found = tasks.find((t) => t.id === task.id);
             if (found) onTaskClick?.(found);
           }}
-          listCellWidth="220px"
-          columnWidth={viewMode === ViewMode.Month ? 120 : viewMode === ViewMode.Week ? 80 : 40}
-          rowHeight={44}
+          listCellWidth="260px"
+          columnWidth={viewMode === ViewMode.Month ? 160 : viewMode === ViewMode.Week ? 100 : 56}
+          rowHeight={52}
+          fontSize="12"
+          barCornerRadius={4}
           barBackgroundColor="#2563EB"
           barBackgroundSelectedColor="#1D4ED8"
         />

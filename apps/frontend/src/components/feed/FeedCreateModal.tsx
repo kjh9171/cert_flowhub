@@ -19,6 +19,7 @@ export function FeedCreateModal({ open, onClose, onCreated }: FeedCreateModalPro
   const [type, setType] = useState<FeedPostType>("SHARE");
   const [workspaceId, setWorkspaceId] = useState("");
   const [projectId, setProjectId] = useState("");
+  const [file, setFile] = useState<File | null>(null);
   const [workspaces, setWorkspaces] = useState<any[]>([]);
   const [projects, setProjects] = useState<any[]>([]);
   const [saving, setSaving] = useState(false);
@@ -45,8 +46,15 @@ export function FeedCreateModal({ open, onClose, onCreated }: FeedCreateModalPro
     setSaving(true);
     setError("");
     try {
-      await api.post("/feed", { workspaceId, projectId: projectId || undefined, type, title: title || undefined, content });
-      setTitle(""); setContent(""); setType("SHARE");
+      let finalContent = content;
+      if (file) {
+        const fd = new FormData();
+        fd.append("file", file);
+        const up = await api.post("/uploads", fd, { headers: { "Content-Type": "multipart/form-data" } });
+        finalContent += `\\n\\n[첨부파일: ${up.data.fileName}](${up.data.fileUrl})`;
+      }
+      await api.post("/feed", { workspaceId, projectId: projectId || undefined, type, title: title || undefined, content: finalContent });
+      setTitle(""); setContent(""); setType("SHARE"); setFile(null);
       onCreated?.();
       onClose();
     } catch (err: any) {
@@ -93,6 +101,14 @@ export function FeedCreateModal({ open, onClose, onCreated }: FeedCreateModalPro
               {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
             </select>
           </div>
+        </div>
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-medium text-slate-600">첨부 파일 (선택)</label>
+          <input
+            type="file"
+            onChange={(e) => setFile(e.target.files?.[0] || null)}
+            className="text-sm text-slate-600"
+          />
         </div>
         {error && <p className="text-sm text-red-600">{error}</p>}
         <div className="flex justify-end gap-2 pt-2">

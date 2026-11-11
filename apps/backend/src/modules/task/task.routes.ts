@@ -5,6 +5,7 @@ import prisma from "../../lib/prisma";
 import { authMiddleware } from "../../middleware/auth";
 import { HttpError } from "../../middleware/error";
 import { io } from "../../realtime/socket";
+import { cacheGet, cacheSet, cacheDelPattern } from "../../lib/cache";
 
 const router = Router();
 router.use(authMiddleware);
@@ -13,6 +14,10 @@ router.use(authMiddleware);
 router.get("/", async (req, res, next) => {
   try {
     const { projectId, workspaceId, status, assigneeId } = req.query;
+    const cacheKey = `tasks:${projectId || ""}:${workspaceId || ""}:${status || ""}:${assigneeId || ""}`;
+    const cached = await cacheGet<any>(cacheKey);
+    if (cached) return res.json(cached);
+
     const tasks = await prisma.task.findMany({
       where: {
         ...(projectId ? { projectId: String(projectId) } : {}),
@@ -27,6 +32,7 @@ router.get("/", async (req, res, next) => {
       },
       orderBy: { createdAt: "desc" },
     });
+    await cacheSet(cacheKey, tasks, 30);
     res.json(tasks);
   } catch (e) {
     next(e);
@@ -60,6 +66,7 @@ router.post("/", async (req, res, next) => {
       },
       include: { assignees: true, dependencies: true },
     });
+    await cacheDelPattern("tasks:*");
     io?.emit("task:updated", { action: "created", task });
     res.status(201).json(task);
   } catch (e) {
@@ -123,6 +130,7 @@ router.patch("/:id", async (req, res, next) => {
       include: { assignees: { include: { user: { select: { id: true, name: true, avatarUrl: true } } } }, dependencies: true },
     });
 
+    await cacheDelPattern("tasks:*");
     io?.emit("task:updated", { action: "updated", task: updated });
     res.json(updated);
   } catch (e) {
@@ -134,6 +142,7 @@ router.patch("/:id", async (req, res, next) => {
 router.delete("/:id", async (req, res, next) => {
   try {
     await prisma.task.delete({ where: { id: req.params.id } });
+    await cacheDelPattern("tasks:*");
     io?.emit("task:updated", { action: "deleted", taskId: req.params.id });
     res.status(204).send();
   } catch (e) {

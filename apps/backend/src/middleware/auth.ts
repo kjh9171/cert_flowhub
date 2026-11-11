@@ -26,3 +26,14 @@ export function optionalAuth(req: Request, _res: Response, next: NextFunction) {
   }
   next();
 }
+
+// RBAC: 허용된 역할만 통과
+export function requireRole(...roles: string[]) {
+  return (req: Request, res: Response, next: NextFunction) => {
+    if (!req.user) return res.status(401).json({ message: "인증이 필요합니다." });
+    if (roles.length && !roles.includes(req.user.role)) {
+      return res.status(403).json({ message: "권한이 없습니다." });
+    }
+    next();
+  };
+}

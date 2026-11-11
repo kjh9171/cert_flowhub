@@ -46,6 +46,9 @@ app.get("/health", (_req, res) => {
 // ── API 라우트 ──────────────────────────────────
 app.use("/api", apiRoutes);
 
+// ── 업로드 파일 정적 서빙 ───────────────────────
+app.use("/uploads", express.static("/app/uploads"));
+
 // ── 404 / 에러 핸들러 ──────────────────────────
 app.use(notFoundHandler);
 app.use(errorHandler);

@@ -11,6 +11,7 @@ import knowledgeRoutes from "../modules/knowledge/knowledge.routes";
 import integrationRoutes from "../modules/integration/integration.routes";
 import notificationRoutes from "../modules/notification/notification.routes";
 import searchRoutes from "../modules/search/search.routes";
+import uploadRoutes from "../modules/upload/upload.routes";
 
 const router = Router();
 
@@ -24,5 +25,6 @@ router.use("/knowledge", knowledgeRoutes);
 router.use("/integrations", integrationRoutes);
 router.use("/notifications", notificationRoutes);
 router.use("/search", searchRoutes);
+router.use("/uploads", uploadRoutes);
 
 export default router;

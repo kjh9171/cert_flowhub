@@ -20,6 +20,9 @@ api.interceptors.response.use(
   (err) => {
     if (err?.response?.status === 401 && typeof window !== "undefined") {
       localStorage.removeItem("flowhub_token");
+      if (window.location.pathname !== "/login") {
+        window.location.href = "/login";
+      }
     }
     return Promise.reject(err);
   }

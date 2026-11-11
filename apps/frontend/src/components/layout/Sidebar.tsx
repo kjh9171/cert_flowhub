@@ -36,15 +36,28 @@ const projects = [
 ];
 
 export function Sidebar() {
-  const { sidebarCollapsed, toggleSidebar } = useLayoutStore();
+  const { sidebarCollapsed, toggleSidebar, mobileSidebarOpen, closeMobileSidebar } = useLayoutStore();
 
   return (
-    <aside
-      className={cn(
-        "flex h-screen flex-col border-r border-slate-200 bg-white transition-all duration-200",
-        sidebarCollapsed ? "w-16" : "w-60"
+    <>
+      {/* Mobile backdrop */}
+      {mobileSidebarOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-slate-900/40 md:hidden"
+          onClick={closeMobileSidebar}
+        />
       )}
-    >
+      <aside
+        className={cn(
+          "flex h-screen flex-col border-r border-slate-200 bg-white transition-all duration-200 dark:border-slate-700 dark:bg-slate-900",
+          // Desktop
+          "md:relative md:translate-x-0",
+          sidebarCollapsed ? "md:w-16" : "md:w-60",
+          // Mobile drawer
+          "fixed inset-y-0 left-0 z-50 w-64 md:static",
+          mobileSidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+        )}
+      >
       <div className="flex h-14 items-center justify-between border-b border-slate-200 px-4">
         {!sidebarCollapsed && <span className="text-lg font-bold text-blue-600">FlowHub</span>}
         <button
@@ -90,6 +103,7 @@ export function Sidebar() {
         </button>
       </div>
     </aside>
+    </>
   );
 }
 
@@ -105,10 +119,12 @@ function SidebarLink({
   collapsed: boolean;
 }) {
   const pathname = usePathname();
+  const closeMobileSidebar = useLayoutStore((s) => s.closeMobileSidebar);
   const active = pathname === href || (href !== "/" && pathname.startsWith(href));
   return (
     <Link
       href={href}
+      onClick={closeMobileSidebar}
       className={cn(
         "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
         active

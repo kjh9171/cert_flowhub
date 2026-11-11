@@ -57,14 +57,14 @@ export function NotificationPanel({ onClose }: NotificationPanelProps) {
     <div className="fixed right-4 top-16 z-50 w-80 rounded-lg border border-slate-200 bg-white shadow-xl dark:border-slate-800 dark:bg-slate-900">
       <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3 dark:border-slate-800">
         <div className="flex items-center gap-2">
-          <Bell className="h-4 w-4 text-slate-600" />
+          <Bell className="h-4 w-4 text-slate-600 dark:text-slate-400" />
           <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">알림</span>
         </div>
         <div className="flex items-center gap-2">
           <button onClick={markAllRead} className="text-xs text-blue-600 hover:underline">
             <CheckCheck className="inline h-3.5 w-3.5 mr-1" />모두 읽음
           </button>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600">
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 dark:text-slate-400">
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -78,15 +78,15 @@ export function NotificationPanel({ onClose }: NotificationPanelProps) {
               key={n.id}
               onClick={() => !n.isRead && markRead(n.id)}
               className={cn(
-                "border-b border-slate-100 px-4 py-3 hover:bg-slate-50 cursor-pointer",
+                "border-b border-slate-100 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer",
                 !n.isRead && "bg-blue-50/50"
               )}
             >
               <div className="flex items-start gap-2">
                 {!n.isRead && <span className="mt-1.5 h-2 w-2 rounded-full bg-blue-500 shrink-0" />}
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-slate-900">{n.title}</p>
-                  {n.body && <p className="text-xs text-slate-500">{n.body}</p>}
+                  <p className="text-sm font-medium text-slate-900 dark:text-slate-100">{n.title}</p>
+                  {n.body && <p className="text-xs text-slate-500 dark:text-slate-400">{n.body}</p>}
                   <p className="mt-1 text-[11px] text-slate-400">{formatDate(n.createdAt)}</p>
                 </div>
               </div>

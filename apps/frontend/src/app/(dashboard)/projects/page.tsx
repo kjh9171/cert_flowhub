@@ -41,19 +41,19 @@ export default function ProjectsPage() {
   return (
     <div className="p-6 space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-slate-900">프로젝트</h1>
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">프로젝트</h1>
         <Button size="sm" onClick={createProject}>
           <Plus className="h-4 w-4" /> 새 프로젝트
         </Button>
       </div>
       <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
         {projects.map((p) => (
-          <div key={p.id} className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+          <div key={p.id} className="rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm">
             <div className="flex items-center gap-2 mb-2">
               <span className="h-3 w-3 rounded-sm" style={{ backgroundColor: p.color || "#2563EB" }} />
-              <p className="font-medium text-slate-900">{p.name}</p>
+              <p className="font-medium text-slate-900 dark:text-slate-100">{p.name}</p>
             </div>
-            <p className="text-sm text-slate-500">{p.description || "설명 없음"}</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400">{p.description || "설명 없음"}</p>
           </div>
         ))}
         {projects.length === 0 && <p className="text-sm text-slate-400">프로젝트가 없습니다.</p>}

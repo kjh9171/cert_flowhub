@@ -19,7 +19,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
 
   if (!ready) {
     return (
-      <div className="flex h-screen items-center justify-center bg-slate-50">
+      <div className="flex h-screen items-center justify-center bg-slate-50 dark:bg-[#090d16]">
         <div className="text-sm text-slate-400">인증 확인 중...</div>
       </div>
     );

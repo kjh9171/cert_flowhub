@@ -53,30 +53,30 @@ export function TaskDetailPanel({ task, onUpdated }: TaskDetailPanelProps) {
       <textarea
         value={content}
         onChange={(e) => setContent(e.target.value)}
-        className="min-h-[100px] w-full rounded-md border border-slate-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+        className="min-h-[100px] w-full rounded-md border border-slate-200 dark:border-slate-800 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
       />
       <div className="grid grid-cols-2 gap-3">
         <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-slate-600">상태</label>
-          <select value={status} onChange={(e) => setStatus(e.target.value as TaskStatus)} className="h-9 rounded-md border border-slate-200 px-3 text-sm">
+          <label className="text-xs font-medium text-slate-600 dark:text-slate-400">상태</label>
+          <select value={status} onChange={(e) => setStatus(e.target.value as TaskStatus)} className="h-9 rounded-md border border-slate-200 dark:border-slate-800 px-3 text-sm">
             {Object.entries(taskStatusLabel).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
           </select>
         </div>
         <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-slate-600">우선순위</label>
-          <select value={priority} onChange={(e) => setPriority(e.target.value as TaskPriority)} className="h-9 rounded-md border border-slate-200 px-3 text-sm">
+          <label className="text-xs font-medium text-slate-600 dark:text-slate-400">우선순위</label>
+          <select value={priority} onChange={(e) => setPriority(e.target.value as TaskPriority)} className="h-9 rounded-md border border-slate-200 dark:border-slate-800 px-3 text-sm">
             {Object.entries(priorityLabel).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
           </select>
         </div>
       </div>
       <div className="flex flex-col gap-1">
-        <label className="text-xs font-medium text-slate-600">진척도: {progress}%</label>
+        <label className="text-xs font-medium text-slate-600 dark:text-slate-400">진척도: {progress}%</label>
         <input type="range" min={0} max={100} value={progress} onChange={(e) => setProgress(Number(e.target.value))} className="w-full" />
       </div>
       <div className="text-xs text-slate-400">
         생성: {task.createdAt} · 수정: {task.updatedAt}
       </div>
-      {msg && <p className="text-sm text-slate-500">{msg}</p>}
+      {msg && <p className="text-sm text-slate-500 dark:text-slate-400">{msg}</p>}
       <Button onClick={save} disabled={saving} className="w-full">
         {saving ? "저장 중..." : "저장"}
       </Button>

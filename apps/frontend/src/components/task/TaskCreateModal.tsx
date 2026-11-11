@@ -81,23 +81,23 @@ export function TaskCreateModal({ open, onClose, onCreated }: TaskCreateModalPro
       <form onSubmit={submit} className="space-y-3">
         <Input label="제목" value={title} onChange={(e) => setTitle(e.target.value)} required />
         <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-slate-600">내용</label>
+          <label className="text-xs font-medium text-slate-600 dark:text-slate-400">내용</label>
           <textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            className="min-h-[80px] rounded-md border border-slate-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+            className="min-h-[80px] rounded-md border border-slate-200 dark:border-slate-800 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
           />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-slate-600">워크스페이스</label>
-            <select value={workspaceId} onChange={(e) => setWorkspaceId(e.target.value)} className="h-9 rounded-md border border-slate-200 px-3 text-sm">
+            <label className="text-xs font-medium text-slate-600 dark:text-slate-400">워크스페이스</label>
+            <select value={workspaceId} onChange={(e) => setWorkspaceId(e.target.value)} className="h-9 rounded-md border border-slate-200 dark:border-slate-800 px-3 text-sm">
               {workspaces.map((w) => <option key={w.id} value={w.id}>{w.name}</option>)}
             </select>
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-slate-600">프로젝트</label>
-            <select value={projectId} onChange={(e) => setProjectId(e.target.value)} className="h-9 rounded-md border border-slate-200 px-3 text-sm">
+            <label className="text-xs font-medium text-slate-600 dark:text-slate-400">프로젝트</label>
+            <select value={projectId} onChange={(e) => setProjectId(e.target.value)} className="h-9 rounded-md border border-slate-200 dark:border-slate-800 px-3 text-sm">
               <option value="">(없음)</option>
               {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
             </select>
@@ -105,8 +105,8 @@ export function TaskCreateModal({ open, onClose, onCreated }: TaskCreateModalPro
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-slate-600">우선순위</label>
-            <select value={priority} onChange={(e) => setPriority(e.target.value as TaskPriority)} className="h-9 rounded-md border border-slate-200 px-3 text-sm">
+            <label className="text-xs font-medium text-slate-600 dark:text-slate-400">우선순위</label>
+            <select value={priority} onChange={(e) => setPriority(e.target.value as TaskPriority)} className="h-9 rounded-md border border-slate-200 dark:border-slate-800 px-3 text-sm">
               <option value="URGENT">긴급</option>
               <option value="HIGH">높음</option>
               <option value="MEDIUM">보통</option>
@@ -114,8 +114,8 @@ export function TaskCreateModal({ open, onClose, onCreated }: TaskCreateModalPro
             </select>
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-slate-600">상태</label>
-            <select value={status} onChange={(e) => setStatus(e.target.value as TaskStatus)} className="h-9 rounded-md border border-slate-200 px-3 text-sm">
+            <label className="text-xs font-medium text-slate-600 dark:text-slate-400">상태</label>
+            <select value={status} onChange={(e) => setStatus(e.target.value as TaskStatus)} className="h-9 rounded-md border border-slate-200 dark:border-slate-800 px-3 text-sm">
               <option value="REQUESTED">요청</option>
               <option value="IN_PROGRESS">진행</option>
               <option value="PAUSED">일시정지</option>

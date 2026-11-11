@@ -56,7 +56,7 @@ export function FeedPostCard({ post, author, onComment }: FeedPostCardProps) {
             <span className="text-xs text-slate-400">{formatDate(post.createdAt)}</span>
           </div>
         </div>
-        <button className="rounded-md p-1 text-slate-400 hover:bg-slate-100">
+        <button className="rounded-md p-1 text-slate-400 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-800">
           <MoreHorizontal className="h-4 w-4" />
         </button>
       </div>
@@ -67,7 +67,7 @@ export function FeedPostCard({ post, author, onComment }: FeedPostCardProps) {
       )}
 
       {/* Content (Markdown) */}
-      <div className="prose prose-sm max-w-none text-slate-700">
+      <div className="prose prose-sm max-w-none text-slate-700 dark:text-slate-300">
         <ReactMarkdown remarkPlugins={[remarkGfm]}>{post.content}</ReactMarkdown>
       </div>
 
@@ -83,7 +83,7 @@ export function FeedPostCard({ post, author, onComment }: FeedPostCardProps) {
           onClick={() => setLiked((l) => !l)}
           className={cn(
             "flex items-center gap-1.5 text-sm transition-colors",
-            liked ? "text-red-500" : "text-slate-500 hover:text-slate-700"
+            liked ? "text-red-500" : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:text-slate-300"
           )}
         >
           <Heart className={cn("h-4 w-4", liked && "fill-current")} />
@@ -94,12 +94,12 @@ export function FeedPostCard({ post, author, onComment }: FeedPostCardProps) {
             setShowComments((s) => !s);
             onComment?.(post.id);
           }}
-          className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700"
+          className="flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:text-slate-300"
         >
           <MessageSquare className="h-4 w-4" />
           댓글
         </button>
-        <button className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700">
+        <button className="flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:text-slate-300">
           <Share2 className="h-4 w-4" />
           공유
         </button>
@@ -113,7 +113,7 @@ export function FeedPostCard({ post, author, onComment }: FeedPostCardProps) {
             <input
               type="text"
               placeholder="댓글을 입력하세요... (@멘션)"
-              className="flex-1 rounded-md border border-slate-200 px-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+              className="flex-1 rounded-md border border-slate-200 dark:border-slate-800 px-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
             />
           </div>
         </div>

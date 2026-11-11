@@ -48,18 +48,18 @@ export default function FeedPage() {
   return (
     <div className="mx-auto max-w-3xl p-6 space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-slate-900">피드</h1>
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">피드</h1>
         <Button size="sm" onClick={() => setModalOpen(true)}>
           <Plus className="h-4 w-4" /> 글 작성
         </Button>
       </div>
 
-      <div className="flex gap-1 rounded-md border border-slate-200 bg-white p-1">
+      <div className="flex gap-1 rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-1">
         {filters.map((f) => (
           <button
             key={f.key}
             onClick={() => setFilter(f.key)}
-            className={`rounded px-3 py-1.5 text-sm font-medium ${filter === f.key ? "bg-blue-600 text-white" : "text-slate-600 hover:bg-slate-100"}`}
+            className={`rounded px-3 py-1.5 text-sm font-medium ${filter === f.key ? "bg-blue-600 text-white" : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-800"}`}
           >
             {f.label}
           </button>

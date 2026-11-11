@@ -29,8 +29,8 @@ export default function TasksPage() {
     <div className="p-6 space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">작업</h1>
-          <p className="text-sm text-slate-500">프로젝트 작업을 관리합니다.</p>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">작업</h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400">프로젝트 작업을 관리합니다.</p>
         </div>
         <div className="flex items-center gap-2">
           <ViewSwitcher value={view} onChange={setView} />

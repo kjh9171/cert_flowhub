@@ -11,7 +11,7 @@ interface BadgeProps {
   dotColor?: string;
 }
 
-export function Badge({ children, color = "bg-slate-100 text-slate-700", className, dot, dotColor }: BadgeProps) {
+export function Badge({ children, color = "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300", className, dot, dotColor }: BadgeProps) {
   return (
     <span
       className={cn(

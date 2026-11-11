@@ -81,9 +81,9 @@ export default function KnowledgePage() {
 
   return (
     <div className="flex h-full">
-      <aside className="w-64 shrink-0 border-r border-slate-200 bg-white p-4">
+      <aside className="w-64 shrink-0 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-slate-900">지식 베이스</h2>
+          <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">지식 베이스</h2>
           <Button size="sm" variant="ghost" onClick={newArticle}>
             <Plus className="h-4 w-4" />
           </Button>
@@ -93,7 +93,7 @@ export default function KnowledgePage() {
             <button
               key={a.id}
               onClick={() => selectArticle(a)}
-              className={`flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm ${selected?.id === a.id ? "bg-blue-50 text-blue-700" : "text-slate-600 hover:bg-slate-100"}`}
+              className={`flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm ${selected?.id === a.id ? "bg-blue-50 text-blue-700" : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-800"}`}
             >
               <BookOpen className="h-3.5 w-3.5 shrink-0" />
               <span className="truncate">{a.title}</span>

@@ -67,29 +67,29 @@ export function KnowledgeEditor({
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="문서 제목"
-            className="text-lg font-semibold text-slate-900 placeholder:text-slate-300 focus:outline-none"
+            className="text-lg font-semibold text-slate-900 dark:text-slate-100 placeholder:text-slate-300 focus:outline-none"
           />
-          <Badge color={vis === "PERSONAL" ? "bg-slate-100 text-slate-600" : "bg-green-100 text-green-700"}>
+          <Badge color={vis === "PERSONAL" ? "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400" : "bg-green-100 text-green-700"}>
             {vis === "PERSONAL" ? "개인" : vis === "TEAM" ? "팀" : "공개"}
           </Badge>
         </div>
         <div className="flex items-center gap-2">
-          <div className="inline-flex rounded-md border border-slate-200 bg-slate-50 p-0.5">
+          <div className="inline-flex rounded-md border border-slate-200 dark:border-slate-800 bg-slate-50 p-0.5">
             <button
               onClick={() => setMode("edit")}
-              className={cn("rounded px-2.5 py-1 text-xs", mode === "edit" ? "bg-white shadow-sm text-slate-900" : "text-slate-500")}
+              className={cn("rounded px-2.5 py-1 text-xs", mode === "edit" ? "bg-white dark:bg-slate-900 shadow-sm text-slate-900 dark:text-slate-100" : "text-slate-500 dark:text-slate-400")}
             >
               <Edit3 className="inline h-3.5 w-3.5 mr-1" />편집
             </button>
             <button
               onClick={() => setMode("preview")}
-              className={cn("rounded px-2.5 py-1 text-xs", mode === "preview" ? "bg-white shadow-sm text-slate-900" : "text-slate-500")}
+              className={cn("rounded px-2.5 py-1 text-xs", mode === "preview" ? "bg-white dark:bg-slate-900 shadow-sm text-slate-900 dark:text-slate-100" : "text-slate-500 dark:text-slate-400")}
             >
               <Eye className="inline h-3.5 w-3.5 mr-1" />미리보기
             </button>
             <button
               onClick={() => setMode("split")}
-              className={cn("rounded px-2.5 py-1 text-xs", mode === "split" ? "bg-white shadow-sm text-slate-900" : "text-slate-500")}
+              className={cn("rounded px-2.5 py-1 text-xs", mode === "split" ? "bg-white dark:bg-slate-900 shadow-sm text-slate-900 dark:text-slate-100" : "text-slate-500 dark:text-slate-400")}
             >
               분할
             </button>
@@ -117,15 +117,15 @@ export function KnowledgeEditor({
             <ul className="space-y-1">
               {toc.map((item, i) => (
                 <li key={i} style={{ paddingLeft: (item.level - 1) * 12 }}>
-                  <a href={`#${item.id}`} className="text-xs text-slate-600 hover:text-blue-600">
+                  <a href={`#${item.id}`} className="text-xs text-slate-600 dark:text-slate-400 hover:text-blue-600">
                     {item.text}
                   </a>
                 </li>
               ))}
             </ul>
           )}
-          <div className="mt-4 border-t border-slate-200 pt-3">
-            <button className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-700">
+          <div className="mt-4 border-t border-slate-200 dark:border-slate-800 pt-3">
+            <button className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:text-slate-300">
               <History className="h-3.5 w-3.5" /> 버전 히스토리
             </button>
           </div>

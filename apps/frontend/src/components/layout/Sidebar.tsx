@@ -60,11 +60,11 @@ export function Sidebar() {
           mobileSidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         )}
       >
-      <div className="flex h-14 items-center justify-between border-b border-slate-200 px-4">
+      <div className="flex h-14 items-center justify-between border-b border-slate-200 dark:border-slate-800 px-4">
         {!sidebarCollapsed && <span className="text-lg font-bold text-blue-600">FlowHub</span>}
         <button
           onClick={toggleSidebar}
-          className="rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+          className="rounded-md p-1 text-slate-400 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-800 hover:text-slate-600 dark:text-slate-400"
         >
           {sidebarCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
         </button>
@@ -86,7 +86,7 @@ export function Sidebar() {
             {projects.map((p) => (
               <button
                 key={p.id}
-                className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
+                className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm text-slate-600 hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-800"
               >
                 <span className="h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: p.color }} />
                 <span className="truncate">{p.name}</span>
@@ -96,8 +96,8 @@ export function Sidebar() {
         )}
       </nav>
 
-      <div className="border-t border-slate-200 p-3">
-        <button className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm text-slate-600 hover:bg-slate-100">
+      <div className="border-t border-slate-200 dark:border-slate-800 p-3">
+        <button className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-800">
           <div className="h-7 w-7 rounded-full bg-blue-100 text-center text-xs font-semibold leading-7 text-blue-700">
             홍
           </div>
@@ -131,7 +131,7 @@ function SidebarLink({
         "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
         active
           ? "bg-blue-50 text-blue-700 font-medium dark:bg-blue-950/60 dark:text-blue-400"
-          : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100",
+          : "text-slate-600 hover:bg-slate-100 dark:bg-slate-800 hover:text-slate-900 dark:text-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100",
         collapsed && "justify-center px-2"
       )}
       title={collapsed ? label : undefined}

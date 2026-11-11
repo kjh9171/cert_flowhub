@@ -58,7 +58,7 @@ export function GanttChart({ tasks, onTaskClick }: GanttChartProps) {
 
   if (ganttTasks.length === 0) {
     return (
-      <div className="flex h-64 flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-slate-300 bg-white text-sm text-slate-400">
+      <div className="flex h-64 flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-slate-300 bg-white dark:bg-slate-900 text-sm text-slate-400">
         <p>표시할 작업이 없습니다.</p>
         <p className="text-xs text-slate-300">시작일과 마감일이 있는 작업을 추가하세요.</p>
       </div>
@@ -68,10 +68,10 @@ export function GanttChart({ tasks, onTaskClick }: GanttChartProps) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <div className="text-sm text-slate-600">
+        <div className="text-sm text-slate-600 dark:text-slate-400">
           총 {ganttTasks.length}개 작업
         </div>
-        <div className="inline-flex rounded-md border border-slate-200 bg-white p-0.5">
+        <div className="inline-flex rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-0.5">
           {[
             { key: ViewMode.Day, label: "일" },
             { key: ViewMode.Week, label: "주" },
@@ -82,7 +82,7 @@ export function GanttChart({ tasks, onTaskClick }: GanttChartProps) {
               onClick={() => setViewMode(v.key)}
               className={cn(
                 "rounded px-3 py-1.5 text-sm font-medium transition-colors",
-                viewMode === v.key ? "bg-blue-600 text-white" : "text-slate-600 hover:bg-slate-100"
+                viewMode === v.key ? "bg-blue-600 text-white" : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-800"
               )}
             >
               {v.label}
@@ -90,7 +90,7 @@ export function GanttChart({ tasks, onTaskClick }: GanttChartProps) {
           ))}
         </div>
       </div>
-      <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
+      <div className="overflow-hidden rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
         <Gantt
           tasks={ganttTasks}
           viewMode={viewMode}
@@ -125,7 +125,7 @@ export function GanttLegend() {
     { color: "#64748B", label: "낮음" },
   ];
   return (
-    <div className="flex flex-wrap items-center gap-3 text-xs text-slate-600">
+    <div className="flex flex-wrap items-center gap-3 text-xs text-slate-600 dark:text-slate-400">
       {items.map((it) => (
         <span key={it.label} className="inline-flex items-center gap-1.5">
           <span className="h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: it.color }} />

@@ -21,7 +21,7 @@ interface ViewSwitcherProps {
 
 export function ViewSwitcher({ value, onChange }: ViewSwitcherProps) {
   return (
-    <div className="inline-flex rounded-md border border-slate-200 bg-white p-0.5 dark:border-slate-700 dark:bg-slate-800">
+    <div className="inline-flex rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-0.5 dark:border-slate-700 dark:bg-slate-800">
       {views.map((v) => (
         <button
           key={v.key}
@@ -30,7 +30,7 @@ export function ViewSwitcher({ value, onChange }: ViewSwitcherProps) {
             "rounded px-3 py-1.5 text-sm font-medium transition-colors",
             value === v.key
               ? "bg-blue-600 text-white"
-              : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700"
+              : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
           )}
         >
           {v.label}

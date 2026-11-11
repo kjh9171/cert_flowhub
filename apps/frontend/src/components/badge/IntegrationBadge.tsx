@@ -55,7 +55,7 @@ export function IntegrationBadge({
         st === "SUCCESS" && "border-green-200 bg-green-50 text-green-700",
         st === "IN_PROGRESS" && "border-blue-200 bg-blue-50 text-blue-700",
         st === "FAILED" && "border-red-200 bg-red-50 text-red-700",
-        st === "PENDING" && "border-slate-200 bg-slate-50 text-slate-600",
+        st === "PENDING" && "border-slate-200 dark:border-slate-800 bg-slate-50 text-slate-600 dark:text-slate-400",
         className
       )}
     >

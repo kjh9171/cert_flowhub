@@ -92,9 +92,9 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="작업, 문서, 피드 검색..."
-            className="flex-1 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none dark:text-slate-100 dark:placeholder:text-slate-500"
+            className="flex-1 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none dark:text-slate-100 dark:placeholder:text-slate-500 dark:text-slate-400"
           />
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600">
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 dark:text-slate-400">
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -106,7 +106,7 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
               onClick={() => setTab(t.key)}
               className={cn(
                 "rounded-md px-3 py-1 text-xs font-medium",
-                tab === t.key ? "bg-blue-600 text-white" : "text-slate-600 hover:bg-slate-100"
+                tab === t.key ? "bg-blue-600 text-white" : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-800"
               )}
             >
               {t.label}
@@ -130,13 +130,13 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
                   onClick={onClose}
                   className="flex w-full items-start gap-3 rounded-md px-3 py-2.5 text-left hover:bg-slate-50 dark:hover:bg-slate-800"
                 >
-                  <div className="mt-0.5 flex h-8 w-8 items-center justify-center rounded-md bg-slate-100 text-slate-500">
+                  <div className="mt-0.5 flex h-8 w-8 items-center justify-center rounded-md bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">
                     <Icon className="h-4 w-4" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <span className="truncate text-sm font-medium text-slate-900 dark:text-slate-100">{r.title}</span>
-                      <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] text-slate-500">
+                      <span className="rounded bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 text-[10px] text-slate-500 dark:text-slate-400">
                         {typeLabel[r.type]}
                       </span>
                     </div>

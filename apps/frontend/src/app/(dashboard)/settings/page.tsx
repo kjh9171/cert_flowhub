@@ -48,13 +48,13 @@ export default function SettingsPage() {
 
   return (
     <div className="mx-auto max-w-2xl p-6 space-y-6">
-      <h1 className="text-2xl font-bold text-slate-900">설정</h1>
-      <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm space-y-4">
-        <h2 className="text-lg font-semibold text-slate-900">프로필</h2>
+      <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">설정</h1>
+      <section className="rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm space-y-4">
+        <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">프로필</h2>
         <Input label="이름" value={name} onChange={(e) => setName(e.target.value)} />
         <Input label="상태 메시지" value={statusMessage} onChange={(e) => setStatusMessage(e.target.value)} />
         <div className="flex items-center gap-3">
-          <span className="text-sm text-slate-600">현재 상태:</span>
+          <span className="text-sm text-slate-600 dark:text-slate-400">현재 상태:</span>
           {currentUser && (
             <UserStatusBadge
               status={currentUser.status}
@@ -70,11 +70,11 @@ export default function SettingsPage() {
           <Button onClick={save} disabled={saving}>
             {saving ? "저장 중..." : "저장"}
           </Button>
-          {msg && <span className="text-sm text-slate-500">{msg}</span>}
+          {msg && <span className="text-sm text-slate-500 dark:text-slate-400">{msg}</span>}
         </div>
       </section>
-      <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-        <h2 className="text-lg font-semibold text-slate-900">계정</h2>
+      <section className="rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm">
+        <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">계정</h2>
         <Button variant="danger" onClick={logout}>로그아웃</Button>
       </section>
     </div>

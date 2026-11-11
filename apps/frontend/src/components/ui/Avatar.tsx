@@ -40,7 +40,7 @@ export function AvatarStack({ users, max = 3 }: { users: { name: string; src?: s
         <Avatar key={i} name={u.name} src={u.src} size="sm" className="ring-2 ring-white" />
       ))}
       {extra > 0 && (
-        <div className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-slate-200 text-xs font-medium text-slate-600 ring-2 ring-white">
+        <div className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-slate-200 text-xs font-medium text-slate-600 dark:text-slate-400 ring-2 ring-white">
           +{extra}
         </div>
       )}

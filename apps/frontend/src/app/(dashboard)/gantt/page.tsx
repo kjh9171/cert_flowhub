@@ -15,7 +15,7 @@ export default function GanttPage() {
   }, [loadTasks, subscribeSocket]);
   return (
     <div className="p-6 space-y-3">
-      <h1 className="text-2xl font-bold text-slate-900">간트 차트</h1>
+      <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">간트 차트</h1>
       <GanttLegend />
       <GanttChart
         tasks={tasks}
@@ -23,7 +23,7 @@ export default function GanttPage() {
           openRightPanel(
             <div className="space-y-2">
               <h3 className="text-base font-semibold">{t.title}</h3>
-              <p className="text-sm text-slate-600">{t.content}</p>
+              <p className="text-sm text-slate-600 dark:text-slate-400">{t.content}</p>
             </div>
           )
         }

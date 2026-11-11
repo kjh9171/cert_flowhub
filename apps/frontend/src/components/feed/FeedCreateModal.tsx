@@ -68,8 +68,8 @@ export function FeedCreateModal({ open, onClose, onCreated }: FeedCreateModalPro
     <Modal open={open} onClose={onClose} title="글 작성">
       <form onSubmit={submit} className="space-y-3">
         <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-slate-600">유형</label>
-          <select value={type} onChange={(e) => setType(e.target.value as FeedPostType)} className="h-9 rounded-md border border-slate-200 px-3 text-sm">
+          <label className="text-xs font-medium text-slate-600 dark:text-slate-400">유형</label>
+          <select value={type} onChange={(e) => setType(e.target.value as FeedPostType)} className="h-9 rounded-md border border-slate-200 dark:border-slate-800 px-3 text-sm">
             <option value="REQUEST">요청</option>
             <option value="TASK">업무</option>
             <option value="JOURNAL">일지</option>
@@ -79,35 +79,35 @@ export function FeedCreateModal({ open, onClose, onCreated }: FeedCreateModalPro
         </div>
         <Input label="제목 (선택)" value={title} onChange={(e) => setTitle(e.target.value)} />
         <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-slate-600">내용 (Markdown)</label>
+          <label className="text-xs font-medium text-slate-600 dark:text-slate-400">내용 (Markdown)</label>
           <textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            className="min-h-[120px] rounded-md border border-slate-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+            className="min-h-[120px] rounded-md border border-slate-200 dark:border-slate-800 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
             required
           />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-slate-600">워크스페이스</label>
-            <select value={workspaceId} onChange={(e) => setWorkspaceId(e.target.value)} className="h-9 rounded-md border border-slate-200 px-3 text-sm">
+            <label className="text-xs font-medium text-slate-600 dark:text-slate-400">워크스페이스</label>
+            <select value={workspaceId} onChange={(e) => setWorkspaceId(e.target.value)} className="h-9 rounded-md border border-slate-200 dark:border-slate-800 px-3 text-sm">
               {workspaces.map((w) => <option key={w.id} value={w.id}>{w.name}</option>)}
             </select>
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-slate-600">프로젝트 (선택)</label>
-            <select value={projectId} onChange={(e) => setProjectId(e.target.value)} className="h-9 rounded-md border border-slate-200 px-3 text-sm">
+            <label className="text-xs font-medium text-slate-600 dark:text-slate-400">프로젝트 (선택)</label>
+            <select value={projectId} onChange={(e) => setProjectId(e.target.value)} className="h-9 rounded-md border border-slate-200 dark:border-slate-800 px-3 text-sm">
               <option value="">(없음)</option>
               {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
             </select>
           </div>
         </div>
         <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-slate-600">첨부 파일 (선택)</label>
+          <label className="text-xs font-medium text-slate-600 dark:text-slate-400">첨부 파일 (선택)</label>
           <input
             type="file"
             onChange={(e) => setFile(e.target.files?.[0] || null)}
-            className="text-sm text-slate-600"
+            className="text-sm text-slate-600 dark:text-slate-400"
           />
         </div>
         {error && <p className="text-sm text-red-600">{error}</p>}

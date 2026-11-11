@@ -28,7 +28,7 @@ export function RightPanel() {
           <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">상세</span>
           <button
             onClick={closeRightPanel}
-            className="rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+            className="rounded-md p-1 text-slate-400 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-800 hover:text-slate-600 dark:text-slate-400"
           >
             <X className="h-4 w-4" />
           </button>

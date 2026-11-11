@@ -49,25 +49,25 @@ export function CalendarView({ tasks, onTaskClick }: CalendarViewProps) {
   return (
     <div className="rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
       <div className="mb-4 flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-slate-900">
+        <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
           {format(current, "yyyy년 M월", { locale: ko })}
         </h3>
         <div className="flex items-center gap-1">
           <button
             onClick={() => setCurrent((c) => subMonths(c, 1))}
-            className="rounded-md p-1.5 text-slate-500 hover:bg-slate-100"
+            className="rounded-md p-1.5 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-800"
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
           <button
             onClick={() => setCurrent(new Date())}
-            className="rounded-md px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-100"
+            className="rounded-md px-3 py-1.5 text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-800"
           >
             오늘
           </button>
           <button
             onClick={() => setCurrent((c) => addMonths(c, 1))}
-            className="rounded-md p-1.5 text-slate-500 hover:bg-slate-100"
+            className="rounded-md p-1.5 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-800"
           >
             <ChevronRight className="h-4 w-4" />
           </button>
@@ -90,14 +90,14 @@ export function CalendarView({ tasks, onTaskClick }: CalendarViewProps) {
               key={key}
               className={cn(
                 "min-h-[90px] bg-white p-1.5 dark:bg-slate-900",
-                !inMonth && "bg-slate-50/50 text-slate-300 dark:bg-slate-800/50 dark:text-slate-600"
+                !inMonth && "bg-slate-50/50 text-slate-300 dark:bg-slate-800/50 dark:text-slate-600 dark:text-slate-400"
               )}
             >
               <div
                 className={cn(
                   "mb-1 inline-flex h-6 w-6 items-center justify-center rounded-full text-xs",
                   isToday && "bg-blue-600 text-white font-bold",
-                  !isToday && inMonth && "text-slate-700",
+                  !isToday && inMonth && "text-slate-700 dark:text-slate-300",
                   !inMonth && "text-slate-300"
                 )}
               >

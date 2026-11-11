@@ -78,12 +78,12 @@ export function KanbanBoard({ tasks, onStatusChange, onTaskClick }: KanbanBoardP
           return (
             <div
               key={col.key}
-              className={cn("flex flex-col rounded-lg border bg-slate-100 border-t-4 border-slate-200 dark:border-slate-800 dark:bg-[#111827]", col.color)}
+              className={cn("flex flex-col rounded-lg border bg-slate-100 dark:bg-slate-800 border-t-4 border-slate-200 dark:border-slate-800 dark:bg-[#111827]", col.color)}
             >
               <div className="flex items-center justify-between px-3 py-2.5">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">{col.label}</span>
-                  <span className="rounded-full bg-slate-200 px-2 py-0.5 text-xs font-medium text-slate-600 dark:bg-slate-700 dark:text-slate-300">
+                  <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 dark:text-slate-200">{col.label}</span>
+                  <span className="rounded-full bg-slate-200 px-2 py-0.5 text-xs font-medium text-slate-600 dark:text-slate-400 dark:bg-slate-700 dark:text-slate-300">
                     {colTasks.length}
                   </span>
                 </div>
@@ -108,7 +108,7 @@ export function KanbanBoard({ tasks, onStatusChange, onTaskClick }: KanbanBoardP
                   {colTasks.length === 0 && (
                     <div
                       id={col.key}
-                      className="flex h-24 items-center justify-center rounded-md border-2 border-dashed border-slate-200 text-xs text-slate-400 dark:border-slate-700 dark:text-slate-500"
+                      className="flex h-24 items-center justify-center rounded-md border-2 border-dashed border-slate-200 dark:border-slate-800 text-xs text-slate-400 dark:border-slate-700 dark:text-slate-500 dark:text-slate-400"
                     >
                       여기에 드롭
                     </div>
@@ -160,7 +160,7 @@ function KanbanCard({
         <button
           {...attributes}
           {...listeners}
-          className="mt-0.5 text-slate-300 hover:text-slate-500 cursor-grab"
+          className="mt-0.5 text-slate-300 hover:text-slate-500 dark:text-slate-400 cursor-grab"
           onClick={(e) => e.stopPropagation()}
         >
           <GripVertical className="h-4 w-4" />
@@ -172,10 +172,10 @@ function KanbanCard({
               style={{ backgroundColor: priorityColor[task.priority] }}
               title={priorityLabel[task.priority]}
             />
-            <span className="truncate text-sm font-medium text-slate-900">{task.title}</span>
+            <span className="truncate text-sm font-medium text-slate-900 dark:text-slate-100">{task.title}</span>
           </div>
           {task.content && (
-            <p className="mb-2 line-clamp-2 text-xs text-slate-500">{task.content}</p>
+            <p className="mb-2 line-clamp-2 text-xs text-slate-500 dark:text-slate-400">{task.content}</p>
           )}
           <div className="flex items-center justify-between">
             <AvatarStackPlaceholder assigneeIds={task.assigneeIds} />
@@ -189,7 +189,7 @@ function KanbanCard({
             </div>
           </div>
           {task.progress > 0 && task.progress < 100 && (
-            <div className="mt-2 h-1 w-full rounded-full bg-slate-100">
+            <div className="mt-2 h-1 w-full rounded-full bg-slate-100 dark:bg-slate-800">
               <div
                 className="h-1 rounded-full bg-blue-500"
                 style={{ width: `${task.progress}%` }}
@@ -215,7 +215,7 @@ function AvatarStackPlaceholder({ assigneeIds }: { assigneeIds: string[] }) {
         </div>
       ))}
       {assigneeIds.length > 3 && (
-        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-200 text-[10px] font-medium text-slate-600 ring-2 ring-white">
+        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-200 text-[10px] font-medium text-slate-600 dark:text-slate-400 ring-2 ring-white">
           +{assigneeIds.length - 3}
         </div>
       )}

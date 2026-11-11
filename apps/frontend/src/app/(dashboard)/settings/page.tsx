@@ -32,7 +32,7 @@ export default function SettingsPage() {
     setSaving(true);
     setMsg("");
     try {
-      await api.patch("/users/me/status", { statusMessage });
+      await api.patch("/users/me", { name, statusMessage });
       setMsg("저장되었습니다.");
     } catch {
       setMsg("저장 실패");

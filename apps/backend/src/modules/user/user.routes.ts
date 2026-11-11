@@ -21,6 +21,21 @@ router.get("/me", authMiddleware, async (req, res, next) => {
   }
 });
 
+// PATCH /api/users/me (프로필 이름 등)
+router.patch("/me", authMiddleware, async (req, res, next) => {
+  try {
+    const { name, statusMessage } = req.body;
+    const user = await prisma.user.update({
+      where: { id: req.user!.userId },
+      data: { name, statusMessage },
+      select: { id: true, email: true, name: true, avatarUrl: true, role: true, status: true, statusMessage: true },
+    });
+    res.json(user);
+  } catch (e) {
+    next(e);
+  }
+});
+
 // PATCH /api/users/me/status
 router.patch("/me/status", authMiddleware, async (req, res, next) => {
   try {

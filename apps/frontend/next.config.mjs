@@ -4,6 +4,7 @@ const nextConfig = {
   reactStrictMode: true,
   experimental: {
     typedRoutes: false,
+    optimizePackageImports: ["lucide-react", "date-fns"],
   },
 };
 

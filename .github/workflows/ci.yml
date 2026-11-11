@@ -9,9 +9,31 @@ on:
 jobs:
   backend:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: flowhub
+          POSTGRES_PASSWORD: flowhub_secret
+          POSTGRES_DB: flowhub
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U flowhub -d flowhub"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
     defaults:
       run:
         working-directory: apps/backend
+    env:
+      DATABASE_URL: postgresql://flowhub:flowhub_secret@localhost:5432/flowhub?schema=public
+      REDIS_URL: redis://localhost:6379
+      JWT_SECRET: ci_secret
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -19,7 +41,9 @@ jobs:
           node-version: 20
       - run: npm ci
       - run: npx prisma generate
+      - run: npx prisma db push --accept-data-loss --skip-generate
       - run: npm run build
+      - run: npm test
 
   frontend:
     runs-on: ubuntu-latest

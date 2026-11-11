@@ -9,6 +9,8 @@ import helmet from "helmet";
 import morgan from "morgan";
 import apiRoutes from "./routes";
 import { initSocket } from "./realtime/socket";
+import swaggerUi from "swagger-ui-express";
+import { swaggerSpec } from "./lib/swagger";
 import { errorHandler, notFoundHandler } from "./middleware/error";
 import { optionalAuth } from "./middleware/auth";
 import redis from "./lib/redis";
@@ -45,6 +47,9 @@ app.get("/health", (_req, res) => {
 
 // ── API 라우트 ──────────────────────────────────
 app.use("/api", apiRoutes);
+
+// ── Swagger 문서 ────────────────────────────────
+app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // ── 업로드 파일 정적 서빙 ───────────────────────
 app.use("/uploads", express.static("/app/uploads"));

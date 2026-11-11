@@ -1,5 +1,4 @@
 // FlowHub Backend Entrypoint
-// Express REST API + Socket.io WebSocket 서버
 
 import "dotenv/config";
 import express from "express";
@@ -7,25 +6,51 @@ import http from "http";
 import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
+import rateLimit from "express-rate-limit";
+import pinoHttp from "pino-http";
 import apiRoutes from "./routes";
 import { initSocket } from "./realtime/socket";
+import { errorHandler, notFoundHandler } from "./middleware/error";
 import swaggerUi from "swagger-ui-express";
 import { swaggerSpec } from "./lib/swagger";
-import { errorHandler, notFoundHandler } from "./middleware/error";
-import { optionalAuth } from "./middleware/auth";
 import redis from "./lib/redis";
+import * as Sentry from "@sentry/node";
 
 const PORT = Number(process.env.PORT) || 4000;
 const CORS_ORIGIN = process.env.CORS_ORIGIN || "*";
 
+if (process.env.SENTRY_DSN) {
+  Sentry.init({ dsn: process.env.SENTRY_DSN, environment: process.env.NODE_ENV || "development" });
+}
+
 const app = express();
 const server = http.createServer(app);
 
-// Socket.io
 initSocket(server);
 
-// ── 미들웨어 ────────────────────────────────────
-app.use(helmet());
+// ── 보안/로깅 미들웨어 ─────────────────────────
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        imgSrc: ["'self'", "data:", "blob:"],
+        connectSrc: ["'self'", "ws:", "wss:"],
+      },
+    },
+  })
+);
+app.use(
+  rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 300,
+    standardHeaders: true,
+    legacyHeaders: false,
+  })
+);
+app.use(pinoHttp());
 app.use(
   cors({
     origin: CORS_ORIGIN === "*" ? true : CORS_ORIGIN.split(","),
@@ -53,6 +78,11 @@ app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // ── 업로드 파일 정적 서빙 ───────────────────────
 app.use("/uploads", express.static("/app/uploads"));
+
+// ── Sentry 에러 핸들러 ──────────────────────────
+if (process.env.SENTRY_DSN) {
+  Sentry.setupExpressErrorHandler(app);
+}
 
 // ── 404 / 에러 핸들러 ──────────────────────────
 app.use(notFoundHandler);

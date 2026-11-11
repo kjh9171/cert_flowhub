@@ -13,6 +13,8 @@ import notificationRoutes from "../modules/notification/notification.routes";
 import searchRoutes from "../modules/search/search.routes";
 import uploadRoutes from "../modules/upload/upload.routes";
 import statsRoutes from "../modules/stats/stats.routes";
+import calendarRoutes from "../modules/calendar/calendar.routes";
+import aiRoutes from "../modules/ai/ai.routes";
 
 const router = Router();
 
@@ -28,5 +30,7 @@ router.use("/notifications", notificationRoutes);
 router.use("/search", searchRoutes);
 router.use("/uploads", uploadRoutes);
 router.use("/stats", statsRoutes);
+router.use("/calendar", calendarRoutes);
+router.use("/ai", aiRoutes);
 
 export default router;

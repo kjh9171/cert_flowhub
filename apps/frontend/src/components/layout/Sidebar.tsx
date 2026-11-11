@@ -19,15 +19,16 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLayoutStore } from "@/stores/layoutStore";
+import { useI18n } from "@/lib/i18n";
 
 const navItems = [
-  { href: "/", icon: LayoutDashboard, label: "대시보드" },
-  { href: "/tasks", icon: Kanban, label: "작업" },
-  { href: "/calendar", icon: Calendar, label: "캘린더" },
-  { href: "/gantt", icon: GanttChart, label: "간트" },
-  { href: "/knowledge", icon: BookOpen, label: "지식 베이스" },
-  { href: "/team", icon: Users, label: "팀" },
-  { href: "/settings", icon: Settings, label: "설정" },
+  { href: "/", icon: LayoutDashboard, key: "dashboard" },
+  { href: "/tasks", icon: Kanban, key: "tasks" },
+  { href: "/calendar", icon: Calendar, key: "calendar" },
+  { href: "/gantt", icon: GanttChart, key: "gantt" },
+  { href: "/knowledge", icon: BookOpen, key: "knowledge" },
+  { href: "/team", icon: Users, key: "team" },
+  { href: "/settings", icon: Settings, key: "settings" },
 ];
 
 const projects = [
@@ -37,6 +38,7 @@ const projects = [
 
 export function Sidebar() {
   const { sidebarCollapsed, toggleSidebar, mobileSidebarOpen, closeMobileSidebar } = useLayoutStore();
+  const { t } = useI18n();
 
   return (
     <>
@@ -70,7 +72,7 @@ export function Sidebar() {
 
       <nav className="flex-1 overflow-y-auto p-2">
         {navItems.map((item) => (
-          <SidebarLink key={item.href} {...item} collapsed={sidebarCollapsed} />
+          <SidebarLink key={item.href} href={item.href} icon={item.icon} label={t(item.key)} collapsed={sidebarCollapsed} />
         ))}
 
         {!sidebarCollapsed && (

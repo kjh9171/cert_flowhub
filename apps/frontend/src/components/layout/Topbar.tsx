@@ -7,6 +7,7 @@ import { useLayoutStore } from "@/stores/layoutStore";
 import { Search, Bell, ChevronDown, Menu, Sun, Moon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import api from "@/lib/api";
+import { useI18n } from "@/lib/i18n";
 import { UserStatusBadge } from "@/components/badge/UserStatusBadge";
 import { IntegrationBadge } from "@/components/badge/IntegrationBadge";
 import { useUserStore } from "@/stores/userStore";
@@ -21,6 +22,7 @@ interface TopbarProps {
 export function Topbar({ onSearchOpen, onNotificationOpen, unreadCount = 0 }: TopbarProps) {
   const { currentUser, setStatus } = useUserStore();
   const [wsOpen, setWsOpen] = useState(false);
+  const { lang, setLang, t } = useI18n();
   const openMobileSidebar = useLayoutStore((s) => s.openMobileSidebar);
   const [dark, setDark] = useState(false);
 
@@ -96,6 +98,12 @@ export function Topbar({ onSearchOpen, onNotificationOpen, unreadCount = 0 }: To
           title="테마 전환"
         >
           {dark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+        </button>
+        <button
+          onClick={() => setLang(lang === "ko" ? "en" : "ko")}
+          className="rounded-md px-2 py-1 text-xs font-medium text-slate-500 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+        >
+          {lang === "ko" ? "EN" : "KO"}
         </button>
         {/* Integration status summary */}
         <div className="hidden items-center gap-1.5 md:flex">

@@ -3,6 +3,7 @@
 import { Router } from "express";
 import prisma from "../../lib/prisma";
 import { authMiddleware } from "../../middleware/auth";
+import { createNotification } from "../../lib/notify";
 import { HttpError } from "../../middleware/error";
 
 const router = Router();
@@ -110,6 +111,17 @@ router.post("/:id/comments", async (req, res, next) => {
       },
       include: { author: { select: { id: true, name: true, avatarUrl: true } } },
     });
+    // 게시글 작성자에게 알림 (댓글 작성자 제외)
+    const post = await prisma.feedPost.findUnique({ where: { id: req.params.id }, select: { authorId: true, title: true } });
+    if (post && post.authorId !== req.user!.userId) {
+      await createNotification({
+        userId: post.authorId,
+        type: "FEED_COMMENT",
+        title: "댓글이 등록되었습니다",
+        body: content.slice(0, 100),
+        link: `/feed`,
+      });
+    }
     res.status(201).json(comment);
   } catch (e) {
     next(e);

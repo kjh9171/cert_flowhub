@@ -3,8 +3,10 @@
 import { Router } from "express";
 import multer from "multer";
 import path from "path";
+import prisma from "../../lib/prisma";
 import { authMiddleware } from "../../middleware/auth";
 import { HttpError } from "../../middleware/error";
+import { io } from "../../realtime/socket";
 
 const router = Router();
 router.use(authMiddleware);
@@ -31,11 +33,30 @@ router.post("/", upload.single("file"), async (req, res, next) => {
     if (!req.file) throw new HttpError(400, "파일이 없습니다.");
     const file = req.file;
     const url = `/uploads/${file.filename}`;
+    const { taskId, postId, knowledgeArticleId } = req.body || {};
+
+    let attachment = null;
+    if (taskId || postId || knowledgeArticleId) {
+      attachment = await prisma.attachment.create({
+        data: {
+          fileName: file.originalname,
+          fileUrl: url,
+          fileSize: file.size,
+          mimeType: file.mimetype,
+          uploaderId: req.user!.userId,
+          taskId: taskId || null,
+          postId: postId || null,
+          knowledgeArticleId: knowledgeArticleId || null,
+        },
+      });
+    }
+
     res.status(201).json({
       fileName: file.originalname,
       fileUrl: url,
       fileSize: file.size,
       mimeType: file.mimetype,
+      attachment,
     });
   } catch (e) {
     next(e);

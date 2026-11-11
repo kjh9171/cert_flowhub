@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import api from "@/lib/api";
+import { getSocket } from "@/lib/socket";
 import { X, CheckCheck, Bell } from "lucide-react";
 import { cn, formatDate } from "@/lib/utils";
 import type { Notification } from "@/types";
@@ -24,6 +25,14 @@ export function NotificationPanel({ onClose }: NotificationPanelProps) {
 
   useEffect(() => {
     load();
+    const s = getSocket();
+    const handler = (n: any) => {
+      setItems((prev) => [n, ...prev]);
+    };
+    s.on("notification:new", handler);
+    return () => {
+      s.off("notification:new", handler);
+    };
   }, []);
 
   const markRead = async (id: string) => {

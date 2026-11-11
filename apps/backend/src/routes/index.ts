@@ -12,6 +12,7 @@ import integrationRoutes from "../modules/integration/integration.routes";
 import notificationRoutes from "../modules/notification/notification.routes";
 import searchRoutes from "../modules/search/search.routes";
 import uploadRoutes from "../modules/upload/upload.routes";
+import statsRoutes from "../modules/stats/stats.routes";
 
 const router = Router();
 
@@ -26,5 +27,6 @@ router.use("/integrations", integrationRoutes);
 router.use("/notifications", notificationRoutes);
 router.use("/search", searchRoutes);
 router.use("/uploads", uploadRoutes);
+router.use("/stats", statsRoutes);
 
 export default router;

@@ -6,6 +6,7 @@ import { authMiddleware } from "../../middleware/auth";
 import { HttpError } from "../../middleware/error";
 import { io } from "../../realtime/socket";
 import { cacheGet, cacheSet, cacheDelPattern } from "../../lib/cache";
+import { notifyMany } from "../../lib/notify";
 
 const router = Router();
 router.use(authMiddleware);
@@ -67,6 +68,16 @@ router.post("/", async (req, res, next) => {
       include: { assignees: true, dependencies: true },
     });
     await cacheDelPattern("tasks:*");
+    // 담당자에게 알림 (작성자 제외)
+    const assignees = (assigneeIds || []).filter((uid: string) => uid !== req.user!.userId);
+    if (assignees.length) {
+      await notifyMany(assignees, {
+        type: "TASK_ASSIGNED",
+        title: "새 작업이 할당되었습니다",
+        body: title,
+        link: `/tasks`,
+      });
+    }
     io?.emit("task:updated", { action: "created", task });
     res.status(201).json(task);
   } catch (e) {

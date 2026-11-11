@@ -72,7 +72,7 @@ export default function DashboardPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">대시보드</h1>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">대시보드</h1>
           <p className="text-sm text-slate-500 dark:text-slate-400">
             안녕하세요, {currentUser?.name}님. 오늘도 좋은 하루 되세요.
           </p>
@@ -94,14 +94,14 @@ export default function DashboardPage() {
               <p className="text-sm text-slate-500 dark:text-slate-400">{s.label}</p>
               <s.icon className={cn("h-5 w-5", s.color)} />
             </div>
-            <p className="mt-2 text-3xl font-bold text-slate-900 dark:text-slate-100">{s.value}</p>
+            <p className="mt-2 text-3xl font-bold text-slate-900 dark:text-white">{s.value}</p>
           </div>
         ))}
       </div>
 
       {/* View switcher */}
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">작업</h2>
+        <h2 className="text-lg font-semibold text-slate-900 dark:text-white">작업</h2>
         <ViewSwitcher value={view} onChange={setView} />
       </div>
 
@@ -145,7 +145,7 @@ export default function DashboardPage() {
       {/* Recent feed */}
       {view !== "FEED" && (
         <section>
-          <h2 className="mb-3 text-lg font-semibold text-slate-900 dark:text-slate-100">최근 피드</h2>
+          <h2 className="mb-3 text-lg font-semibold text-slate-900 dark:text-white">최근 피드</h2>
           <div className="space-y-4">
             {mockPosts.map((p) => (
               <FeedPostCard key={p.id} post={p} author={mockUsers[p.authorId]} />

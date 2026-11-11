@@ -78,11 +78,11 @@ export function KanbanBoard({ tasks, onStatusChange, onTaskClick }: KanbanBoardP
           return (
             <div
               key={col.key}
-              className={cn("flex flex-col rounded-lg border border-slate-200 bg-slate-50/50 border-t-4 dark:border-slate-800 dark:bg-slate-900/60", col.color)}
+              className={cn("flex flex-col rounded-lg border bg-slate-100 border-t-4 border-slate-200 dark:border-slate-800 dark:bg-[#111827]", col.color)}
             >
               <div className="flex items-center justify-between px-3 py-2.5">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold text-slate-700">{col.label}</span>
+                  <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">{col.label}</span>
                   <span className="rounded-full bg-slate-200 px-2 py-0.5 text-xs font-medium text-slate-600 dark:bg-slate-700 dark:text-slate-300">
                     {colTasks.length}
                   </span>

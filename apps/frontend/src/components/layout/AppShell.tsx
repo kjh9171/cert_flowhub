@@ -16,7 +16,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <I18nProvider>
-      <div className="flex h-screen overflow-hidden bg-slate-50">
+      <div className="flex h-screen overflow-hidden bg-slate-50 dark:bg-[#090d16]">
         <Sidebar />
         <div className="flex flex-1 flex-col overflow-hidden">
           <Topbar
@@ -24,7 +24,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             onNotificationOpen={() => setNotifOpen((o) => !o)}
             unreadCount={5}
           />
-          <main className="flex-1 overflow-y-auto">{children}</main>
+          <main className="flex-1 overflow-y-auto bg-slate-50 dark:bg-[#090d16]">{children}</main>
         </div>
         <RightPanel />
         <GlobalSearch open={searchOpen} onClose={() => setSearchOpen(false)} />

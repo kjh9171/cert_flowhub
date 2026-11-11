@@ -1,0 +1,516 @@
+// FlowHub Prisma Schema
+// DB: PostgreSQL 16
+// ORM: Prisma
+// 생성: npx prisma generate / npx prisma migrate dev
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────
+// Enum 정의
+// ─────────────────────────────────────────────
+
+enum UserRole {
+  ADMIN   // 워크스페이스 관리자
+  MEMBER  // 일반 멤버
+  VIEWER  // 읽기 전용
+}
+
+enum UserStatus {
+  ONLINE   // 온라인
+  AWAY     // 자리비움
+  BUSY     // 다른 업무 중
+  OFFLINE  // 오프라인
+}
+
+enum TaskStatus {
+  REQUESTED   // 요청
+  IN_PROGRESS // 진행
+  PAUSED      // 일시정지
+  DONE        // 완료
+  CANCELLED   // 취소
+}
+
+enum TaskPriority {
+  URGENT // 긴급
+  HIGH   // 높음
+  MEDIUM // 보통
+  LOW    // 낮음
+}
+
+enum FeedPostType {
+  REQUEST      // 요청
+  TASK         // 업무
+  JOURNAL      // 일지
+  SHARE        // 공유
+  ANNOUNCEMENT // 공지
+}
+
+enum IntegrationStatus {
+  SUCCESS      // 성공 (Green)
+  IN_PROGRESS  // 진행중 (Blue)
+  FAILED       // 실패 (Red)
+  PENDING      // 대기
+}
+
+enum IntegrationEventType {
+  COMMIT     // GitHub 커밋
+  PULL_REQUEST // GitHub PR
+  CI_CD      // CI/CD 파이프라인
+  DEPLOY     // 배포
+  EXTERNAL_API // 외부 API
+}
+
+enum ProjectViewType {
+  FEED     // 피드
+  KANBAN   // 칸반
+  CALENDAR // 달력
+  GANTT    // 간트
+}
+
+enum KnowledgeVisibility {
+  PERSONAL // 개인
+  TEAM     // 팀 (승격됨)
+  PUBLIC   // 전체 공개
+}
+
+enum DependencyType {
+  FS // Finish-to-Start (기본)
+  SS // Start-to-Start
+  FF // Finish-to-Finish
+  SF // Start-to-Finish
+}
+
+enum WorkspaceRole {
+  OWNER  // 소유자
+  ADMIN  // 관리자
+  MEMBER // 멤버
+  GUEST  // 게스트
+}
+
+enum ProjectRole {
+  OWNER   // 소유자
+  MANAGER // 매니저
+  MEMBER  // 멤버
+  VIEWER  // 뷰어
+}
+
+enum NotificationType {
+  TASK_ASSIGNED   // 작업 할당
+  TASK_UPDATED    // 작업 수정
+  TASK_COMMENT    // 작업 댓글
+  FEED_MENTION    // 피드 멘션
+  FEED_COMMENT    // 피드 댓글
+  KNOWLEDGE_SHARE // 지식 공유
+  INTEGRATION     // 연동 상태 변경
+  SYSTEM          // 시스템
+}
+
+// ─────────────────────────────────────────────
+// 핵심 엔티티
+// ─────────────────────────────────────────────
+
+model User {
+  id            String      @id @default(cuid())
+  email         String      @unique
+  passwordHash  String
+  name          String
+  avatarUrl     String?
+  role          UserRole    @default(MEMBER)
+  status        UserStatus  @default(OFFLINE)
+  statusMessage String?
+  lastSeenAt    DateTime?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  // Relations
+  ownedWorkspaces    Workspace[]         @relation("WorkspaceOwner")
+  workspaceMembers   WorkspaceMember[]
+  ownedProjects      Project[]           @relation("ProjectOwner")
+  projectMembers     ProjectMember[]
+  authoredTasks      Task[]              @relation("TaskAuthor")
+  taskAssignments    TaskAssignee[]
+  authoredPosts      FeedPost[]          @relation("PostAuthor")
+  comments           Comment[]
+  uploadedFiles      Attachment[]
+  authoredArticles   KnowledgeArticle[]  @relation("ArticleAuthor")
+  editedVersions     KnowledgeVersion[]
+  integrationBadges  IntegrationBadge[]  @relation("BadgeActor")
+  notifications      Notification[]
+  mentions           Mention[]
+
+  @@index([email])
+  @@index([status])
+  @@map("users")
+}
+
+model Workspace {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?
+  avatarUrl   String?
+  ownerId     String
+  owner       User     @relation("WorkspaceOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  members    WorkspaceMember[]
+  projects   Project[]
+  posts      FeedPost[]
+  articles   KnowledgeArticle[]
+  badges     IntegrationBadge[]
+
+  @@index([ownerId])
+  @@map("workspaces")
+}
+
+model WorkspaceMember {
+  id          String        @id @default(cuid())
+  workspaceId String
+  userId      String
+  role        WorkspaceRole @default(MEMBER)
+  joinedAt    DateTime      @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, userId])
+  @@index([userId])
+  @@map("workspace_members")
+}
+
+model Project {
+  id          String          @id @default(cuid())
+  workspaceId String
+  workspace   Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  color       String?         // HEX color for timeline layer
+  viewType    ProjectViewType @default(KANBAN)
+  startDate   DateTime?
+  endDate     DateTime?
+  ownerId     String
+  owner       User            @relation("ProjectOwner", fields: [ownerId], references: [id])
+  isArchived  Boolean         @default(false)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  members   ProjectMember[]
+  tasks     Task[]
+  posts     FeedPost[]
+  badges    IntegrationBadge[]
+
+  @@index([workspaceId])
+  @@index([ownerId])
+  @@map("projects")
+}
+
+model ProjectMember {
+  id        String      @id @default(cuid())
+  projectId String
+  userId    String
+  role      ProjectRole @default(MEMBER)
+  joinedAt  DateTime    @default(now())
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, userId])
+  @@index([userId])
+  @@map("project_members")
+}
+
+// ─────────────────────────────────────────────
+// 작업 관리 (Task Management)
+// ─────────────────────────────────────────────
+
+model Task {
+  id          String       @id @default(cuid())
+  projectId   String?
+  project     Project?     @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  workspaceId String?
+  title       String
+  content     String?      @db.Text
+  status      TaskStatus   @default(REQUESTED)
+  priority    TaskPriority @default(MEDIUM)
+  progress    Int          @default(0) // 0~100 %
+  startDate   DateTime?
+  endDate     DateTime?
+  dueDate     DateTime?
+  authorId    String
+  author      User         @relation("TaskAuthor", fields: [authorId], references: [id])
+  parentId    String?      // 상위 작업 (서브태스크)
+  parent      Task?        @relation("TaskSubtasks", fields: [parentId], references: [id], onDelete: Cascade)
+  subtasks    Task[]       @relation("TaskSubtasks")
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  assignees     TaskAssignee[]
+  dependencies  TaskDependency[] @relation("DependentTask")   // 이 작업이 의존하는 작업들
+  dependents    TaskDependency[] @relation("PrerequisiteTask") // 이 작업에 의존하는 작업들
+  comments      Comment[]
+  attachments   Attachment[]
+  badges        IntegrationBadge[]
+  mentions      Mention[]
+
+  @@index([projectId])
+  @@index([workspaceId])
+  @@index([authorId])
+  @@index([status])
+  @@index([priority])
+  @@index([startDate, endDate])
+  @@map("tasks")
+}
+
+model TaskAssignee {
+  id        String   @id @default(cuid())
+  taskId    String
+  userId    String
+  assignedAt DateTime @default(now())
+
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([taskId, userId])
+  @@index([userId])
+  @@map("task_assignees")
+}
+
+model TaskDependency {
+  id                String         @id @default(cuid())
+  taskId            String         // 의존하는 작업 (후행)
+  dependsOnTaskId   String         // 선행 작업
+  type              DependencyType @default(FS)
+  lagDays           Int            @default(0) // 지연 일수
+
+  task          Task @relation("DependentTask", fields: [taskId], references: [id], onDelete: Cascade)
+  dependsOnTask Task @relation("PrerequisiteTask", fields: [dependsOnTaskId], references: [id], onDelete: Cascade)
+
+  @@unique([taskId, dependsOnTaskId])
+  @@index([dependsOnTaskId])
+  @@map("task_dependencies")
+}
+
+// ─────────────────────────────────────────────
+// 협업 (Collaboration)
+// ─────────────────────────────────────────────
+
+model FeedPost {
+  id          String       @id @default(cuid())
+  workspaceId String
+  workspace   Workspace    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  projectId   String?
+  project     Project?     @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  authorId    String
+  author      User         @relation("PostAuthor", fields: [authorId], references: [id])
+  type        FeedPostType @default(SHARE)
+  title       String?
+  content     String       @db.Text
+  isPinned    Boolean      @default(false)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  comments    Comment[]
+  attachments Attachment[]
+  mentions    Mention[]
+
+  @@index([workspaceId])
+  @@index([projectId])
+  @@index([authorId])
+  @@index([createdAt])
+  @@map("feed_posts")
+}
+
+model Comment {
+  id               String   @id @default(cuid())
+  content          String   @db.Text
+  authorId         String
+  author           User     @relation(fields: [authorId], references: [id])
+  postId           String?
+  post             FeedPost? @relation(fields: [postId], references: [id], onDelete: Cascade)
+  taskId           String?
+  task             Task?    @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  knowledgeArticleId String?
+  knowledgeArticle KnowledgeArticle? @relation(fields: [knowledgeArticleId], references: [id], onDelete: Cascade)
+  parentId         String?  // 대댓글
+  parent           Comment? @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies          Comment[] @relation("CommentReplies")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  mentions Mention[]
+
+  @@index([postId])
+  @@index([taskId])
+  @@index([knowledgeArticleId])
+  @@index([authorId])
+  @@map("comments")
+}
+
+model Mention {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  postId    String?
+  post      FeedPost? @relation(fields: [postId], references: [id], onDelete: Cascade)
+  commentId String?
+  comment   Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  taskId    String?
+  task      Task?    @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@map("mentions")
+}
+
+model Attachment {
+  id                String   @id @default(cuid())
+  fileName          String
+  fileUrl           String
+  fileSize          Int      // bytes
+  mimeType          String
+  uploaderId        String
+  uploader          User     @relation(fields: [uploaderId], references: [id])
+  postId            String?
+  post              FeedPost? @relation(fields: [postId], references: [id], onDelete: Cascade)
+  taskId            String?
+  task              Task?    @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  knowledgeArticleId String?
+  knowledgeArticle  KnowledgeArticle? @relation(fields: [knowledgeArticleId], references: [id], onDelete: Cascade)
+  createdAt         DateTime @default(now())
+
+  @@index([uploaderId])
+  @@index([postId])
+  @@index([taskId])
+  @@index([knowledgeArticleId])
+  @@map("attachments")
+}
+
+// ─────────────────────────────────────────────
+// 지식 베이스 (Knowledge Base)
+// ─────────────────────────────────────────────
+
+model KnowledgeArticle {
+  id            String             @id @default(cuid())
+  workspaceId   String?
+  workspace     Workspace?         @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  authorId      String
+  author        User               @relation("ArticleAuthor", fields: [authorId], references: [id])
+  title         String
+  content       String             @db.Text // Markdown
+  summary       String?            @db.Text
+  visibility    KnowledgeVisibility @default(PERSONAL)
+  category      String?
+  tags          String[]           @default([])
+  version       Int                @default(1)
+  isPinned      Boolean            @default(false)
+  parentId      String?            // 폴더/계층 구조
+  parent        KnowledgeArticle?  @relation("ArticleTree", fields: [parentId], references: [id], onDelete: SetNull)
+  children      KnowledgeArticle[] @relation("ArticleTree")
+  promotedFromId String?           // 개인 노트 -> 팀 승격 원본 추적
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  publishedAt   DateTime?
+
+  versions     KnowledgeVersion[]
+  comments     Comment[]
+  attachments  Attachment[]
+  links        KnowledgeLink[]
+
+  @@index([workspaceId])
+  @@index([authorId])
+  @@index([visibility])
+  @@index([category])
+  @@index([createdAt])
+  @@map("knowledge_articles")
+}
+
+model KnowledgeVersion {
+  id        String   @id @default(cuid())
+  articleId String
+  article   KnowledgeArticle @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  version   Int
+  content   String   @db.Text
+  title     String
+  editorId  String
+  editor    User     @relation(fields: [editorId], references: [id])
+  changeNote String?
+  createdAt DateTime @default(now())
+
+  @@unique([articleId, version])
+  @@index([articleId])
+  @@map("knowledge_versions")
+}
+
+model KnowledgeLink {
+  id         String   @id @default(cuid())
+  articleId  String
+  article    KnowledgeArticle @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  taskId     String?  // 관련 작업 링크
+  url        String?  // 외부 링크
+  label      String?
+  createdAt  DateTime @default(now())
+
+  @@index([articleId])
+  @@map("knowledge_links")
+}
+
+// ─────────────────────────────────────────────
+// 연동 Badge (Integration)
+// ─────────────────────────────────────────────
+
+model IntegrationBadge {
+  id          String              @id @default(cuid())
+  status      IntegrationStatus   @default(PENDING)
+  eventType   IntegrationEventType
+  title       String
+  description String?
+  targetUrl   String?             // GitHub PR/커밋 링크 등
+  externalId  String?             // 외부 시스템 ID
+  metadata    Json?               // 추가 메타데이터
+  taskId      String?
+  task        Task?               @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  projectId   String?
+  project     Project?            @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  workspaceId String?
+  workspace   Workspace?          @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  actorId     String?
+  actor       User?               @relation("BadgeActor", fields: [actorId], references: [id], onDelete: SetNull)
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  @@index([taskId])
+  @@index([projectId])
+  @@index([workspaceId])
+  @@index([status])
+  @@index([eventType])
+  @@index([createdAt])
+  @@map("integration_badges")
+}
+
+// ─────────────────────────────────────────────
+// 알림 (Notifications)
+// ─────────────────────────────────────────────
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      NotificationType
+  title     String
+  body      String?
+  link      String?
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  @@index([userId, isRead])
+  @@index([createdAt])
+  @@map("notifications")
+}

@@ -51,7 +51,7 @@ export function Sidebar() {
       )}
       <aside
         className={cn(
-          "flex h-screen flex-col border-r border-slate-200 bg-white transition-all duration-200",
+          "flex h-screen flex-col border-r border-slate-200 bg-white transition-all duration-200 dark:border-slate-800 dark:bg-slate-900",
           // Desktop
           "md:relative md:translate-x-0",
           sidebarCollapsed ? "md:w-16" : "md:w-60",
@@ -86,7 +86,7 @@ export function Sidebar() {
             {projects.map((p) => (
               <button
                 key={p.id}
-                className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm text-slate-600 hover:bg-slate-100"
+                className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
               >
                 <span className="h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: p.color }} />
                 <span className="truncate">{p.name}</span>
@@ -130,8 +130,8 @@ function SidebarLink({
       className={cn(
         "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
         active
-          ? "bg-blue-50 text-blue-700 font-medium"
-          : "text-slate-600 hover:bg-slate-100 hover:text-slate-900",
+          ? "bg-blue-50 text-blue-700 font-medium dark:bg-blue-950/60 dark:text-blue-400"
+          : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100",
         collapsed && "justify-center px-2"
       )}
       title={collapsed ? label : undefined}

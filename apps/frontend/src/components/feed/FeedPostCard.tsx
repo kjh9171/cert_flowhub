@@ -38,14 +38,14 @@ export function FeedPostCard({ post, author, onComment }: FeedPostCardProps) {
   const [showComments, setShowComments] = useState(false);
 
   return (
-    <article className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+    <article className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
       {/* Header */}
       <div className="mb-3 flex items-start justify-between">
         <div className="flex items-center gap-3">
           <Avatar name={author?.name || "사용자"} src={author?.avatarUrl} size="md" />
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold text-slate-900">
+              <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
                 {author?.name || "익명"}
               </span>
               <Badge color={typeColor[post.type]}>{typeLabel[post.type]}</Badge>
@@ -63,7 +63,7 @@ export function FeedPostCard({ post, author, onComment }: FeedPostCardProps) {
 
       {/* Title */}
       {post.title && (
-        <h3 className="mb-2 text-base font-semibold text-slate-900">{post.title}</h3>
+        <h3 className="mb-2 text-base font-semibold text-slate-900 dark:text-slate-100">{post.title}</h3>
       )}
 
       {/* Content (Markdown) */}
@@ -113,7 +113,7 @@ export function FeedPostCard({ post, author, onComment }: FeedPostCardProps) {
             <input
               type="text"
               placeholder="댓글을 입력하세요... (@멘션)"
-              className="flex-1 rounded-md border border-slate-200 px-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+              className="flex-1 rounded-md border border-slate-200 px-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
             />
           </div>
         </div>

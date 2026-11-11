@@ -72,8 +72,8 @@ export default function DashboardPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">대시보드</h1>
-          <p className="text-sm text-slate-500">
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">대시보드</h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400">
             안녕하세요, {currentUser?.name}님. 오늘도 좋은 하루 되세요.
           </p>
         </div>
@@ -89,19 +89,19 @@ export default function DashboardPage() {
       {/* Stats */}
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         {stats.map((s) => (
-          <div key={s.label} className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+          <div key={s.label} className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
             <div className="flex items-center justify-between">
-              <p className="text-sm text-slate-500">{s.label}</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">{s.label}</p>
               <s.icon className={cn("h-5 w-5", s.color)} />
             </div>
-            <p className="mt-2 text-3xl font-bold text-slate-900">{s.value}</p>
+            <p className="mt-2 text-3xl font-bold text-slate-900 dark:text-slate-100">{s.value}</p>
           </div>
         ))}
       </div>
 
       {/* View switcher */}
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-slate-900">작업</h2>
+        <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">작업</h2>
         <ViewSwitcher value={view} onChange={setView} />
       </div>
 
@@ -145,7 +145,7 @@ export default function DashboardPage() {
       {/* Recent feed */}
       {view !== "FEED" && (
         <section>
-          <h2 className="mb-3 text-lg font-semibold text-slate-900">최근 피드</h2>
+          <h2 className="mb-3 text-lg font-semibold text-slate-900 dark:text-slate-100">최근 피드</h2>
           <div className="space-y-4">
             {mockPosts.map((p) => (
               <FeedPostCard key={p.id} post={p} author={mockUsers[p.authorId]} />

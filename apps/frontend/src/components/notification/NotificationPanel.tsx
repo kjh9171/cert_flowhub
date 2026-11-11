@@ -54,11 +54,11 @@ export function NotificationPanel({ onClose }: NotificationPanelProps) {
   };
 
   return (
-    <div className="fixed right-4 top-16 z-50 w-80 rounded-lg border border-slate-200 bg-white shadow-xl">
-      <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
+    <div className="fixed right-4 top-16 z-50 w-80 rounded-lg border border-slate-200 bg-white shadow-xl dark:border-slate-800 dark:bg-slate-900">
+      <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3 dark:border-slate-800">
         <div className="flex items-center gap-2">
           <Bell className="h-4 w-4 text-slate-600" />
-          <span className="text-sm font-semibold text-slate-900">알림</span>
+          <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">알림</span>
         </div>
         <div className="flex items-center gap-2">
           <button onClick={markAllRead} className="text-xs text-blue-600 hover:underline">

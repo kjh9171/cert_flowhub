@@ -59,9 +59,9 @@ export function KnowledgeEditor({
   };
 
   return (
-    <div className="flex h-full flex-col rounded-lg border border-slate-200 bg-white">
+    <div className="flex h-full flex-col rounded-lg border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
       {/* Toolbar */}
-      <div className="flex items-center justify-between border-b border-slate-200 px-4 py-2.5">
+      <div className="flex items-center justify-between border-b border-slate-200 px-4 py-2.5 dark:border-slate-800">
         <div className="flex items-center gap-2">
           <input
             value={title}
@@ -107,7 +107,7 @@ export function KnowledgeEditor({
 
       <div className="flex flex-1 overflow-hidden">
         {/* TOC sidebar */}
-        <aside className="hidden w-56 shrink-0 overflow-y-auto border-r border-slate-200 bg-slate-50/50 p-3 lg:block">
+        <aside className="hidden w-56 shrink-0 overflow-y-auto border-r border-slate-200 bg-slate-50/50 p-3 lg:block dark:border-slate-800 dark:bg-slate-800/50">
           <div className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase text-slate-400">
             <List className="h-3.5 w-3.5" /> 목차
           </div>
@@ -139,13 +139,13 @@ export function KnowledgeEditor({
               onChange={(e) => setContent(e.target.value)}
               placeholder="마크다운으로 작성하세요... (# 제목, ## 소제목, - 목록, **굵게**)"
               className={cn(
-                "flex-1 resize-none border-0 bg-white p-4 font-mono text-sm text-slate-800 focus:outline-none",
-                mode === "split" && "border-r border-slate-200"
+                "flex-1 resize-none border-0 bg-white p-4 font-mono text-sm text-slate-800 focus:outline-none dark:bg-slate-900 dark:text-slate-200",
+                mode === "split" && "border-r border-slate-200 dark:border-slate-800"
               )}
             />
           )}
           {(mode === "preview" || mode === "split") && (
-            <div className="flex-1 overflow-y-auto p-4">
+            <div className="flex-1 overflow-y-auto p-4 dark:text-slate-200">
               <div className="prose prose-sm max-w-none">
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>{content || "*미리보기*"}</ReactMarkdown>
               </div>

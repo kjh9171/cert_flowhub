@@ -47,7 +47,7 @@ export function CalendarView({ tasks, onTaskClick }: CalendarViewProps) {
   }, [tasks]);
 
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-4">
+    <div className="rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
       <div className="mb-4 flex items-center justify-between">
         <h3 className="text-lg font-semibold text-slate-900">
           {format(current, "yyyy년 M월", { locale: ko })}
@@ -76,7 +76,7 @@ export function CalendarView({ tasks, onTaskClick }: CalendarViewProps) {
 
       <div className="grid grid-cols-7 gap-px rounded-md bg-slate-200 overflow-hidden">
         {["일", "월", "화", "수", "목", "금", "토"].map((d) => (
-          <div key={d} className="bg-slate-50 py-2 text-center text-xs font-medium text-slate-500">
+          <div key={d} className="bg-slate-50 py-2 text-center text-xs font-medium text-slate-500 dark:bg-slate-800 dark:text-slate-400">
             {d}
           </div>
         ))}
@@ -89,8 +89,8 @@ export function CalendarView({ tasks, onTaskClick }: CalendarViewProps) {
             <div
               key={key}
               className={cn(
-                "min-h-[90px] bg-white p-1.5",
-                !inMonth && "bg-slate-50/50 text-slate-300"
+                "min-h-[90px] bg-white p-1.5 dark:bg-slate-900",
+                !inMonth && "bg-slate-50/50 text-slate-300 dark:bg-slate-800/50 dark:text-slate-600"
               )}
             >
               <div

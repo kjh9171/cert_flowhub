@@ -78,12 +78,12 @@ export function KanbanBoard({ tasks, onStatusChange, onTaskClick }: KanbanBoardP
           return (
             <div
               key={col.key}
-              className={cn("flex flex-col rounded-lg border border-slate-200 bg-slate-50/50 border-t-4", col.color)}
+              className={cn("flex flex-col rounded-lg border border-slate-200 bg-slate-50/50 border-t-4 dark:border-slate-800 dark:bg-slate-900/60", col.color)}
             >
               <div className="flex items-center justify-between px-3 py-2.5">
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-semibold text-slate-700">{col.label}</span>
-                  <span className="rounded-full bg-slate-200 px-2 py-0.5 text-xs font-medium text-slate-600">
+                  <span className="rounded-full bg-slate-200 px-2 py-0.5 text-xs font-medium text-slate-600 dark:bg-slate-700 dark:text-slate-300">
                     {colTasks.length}
                   </span>
                 </div>
@@ -108,7 +108,7 @@ export function KanbanBoard({ tasks, onStatusChange, onTaskClick }: KanbanBoardP
                   {colTasks.length === 0 && (
                     <div
                       id={col.key}
-                      className="flex h-24 items-center justify-center rounded-md border-2 border-dashed border-slate-200 text-xs text-slate-400"
+                      className="flex h-24 items-center justify-center rounded-md border-2 border-dashed border-slate-200 text-xs text-slate-400 dark:border-slate-700 dark:text-slate-500"
                     >
                       여기에 드롭
                     </div>
@@ -152,7 +152,7 @@ function KanbanCard({
       style={style}
       onClick={onClick}
       className={cn(
-        "rounded-md border border-slate-200 bg-white p-3 shadow-sm cursor-pointer hover:shadow-md transition-shadow",
+        "rounded-md border border-slate-200 bg-white p-3 shadow-sm cursor-pointer hover:shadow-md transition-shadow dark:border-slate-800 dark:bg-slate-900",
         dragging && "shadow-lg ring-2 ring-blue-400"
       )}
     >

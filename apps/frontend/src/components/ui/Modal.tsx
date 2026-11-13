@@ -35,9 +35,9 @@ export function Modal({ open, onClose, title, children, width = "max-w-lg" }: Mo
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-slate-900/40" onClick={onClose} />
-      <div className={cn("relative w-full rounded-lg bg-white shadow-xl dark:bg-slate-900", width)}>
+      <div className={cn("relative w-full rounded-lg bg-card shadow-xl", width)}>
         {title && (
-          <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4 dark:border-slate-800">
+          <div className="flex items-center justify-between border-b border-line px-5 py-4">
             <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">{title}</h2>
             <button onClick={onClose} className="text-slate-400 hover:text-slate-600 dark:text-slate-400">
               <X className="h-5 w-5" />

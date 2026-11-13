@@ -20,11 +20,11 @@ export function RightPanel() {
       />
       <aside
         className={cn(
-          "fixed right-0 top-0 z-40 h-full w-full max-w-md border-l border-slate-200 bg-white shadow-xl transition-transform duration-200 lg:static lg:z-auto lg:max-w-sm lg:shadow-none dark:border-slate-800 dark:bg-slate-900",
+          "fixed right-0 top-0 z-40 h-full w-full max-w-md border-l border-line bg-card shadow-xl transition-transform duration-200 lg:static lg:z-auto lg:max-w-md lg:shadow-none",
           rightPanelOpen ? "translate-x-0" : "translate-x-full"
         )}
       >
-        <div className="flex h-14 items-center justify-between border-b border-slate-200 px-4 dark:border-slate-800">
+        <div className="flex h-14 items-center justify-between border-b border-line px-4">
           <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">상세</span>
           <button
             onClick={closeRightPanel}

@@ -15,6 +15,16 @@ import uploadRoutes from "../modules/upload/upload.routes";
 import statsRoutes from "../modules/stats/stats.routes";
 import calendarRoutes from "../modules/calendar/calendar.routes";
 import aiRoutes from "../modules/ai/ai.routes";
+import ordersRoutes from "../modules/orders/orders.routes";
+import marketOrdersRoutes from "../modules/market-orders/market-orders.routes";
+import inventoryRoutes from "../modules/inventory/inventory.routes";
+import priceItemsRoutes from "../modules/price-items/price-items.routes";
+import handoverMemosRoutes from "../modules/handover-memos/handover-memos.routes";
+import drawingsRoutes from "../modules/drawings/drawings.routes";
+import smsRoutes from "../modules/sms/sms.routes";
+import emailsRoutes from "../modules/emails/emails.routes";
+import keywordsRoutes from "../modules/keywords/keywords.routes";
+import auditLogsRoutes from "../modules/audit-logs/audit-logs.routes";
 
 const router = Router();
 
@@ -32,5 +42,15 @@ router.use("/uploads", uploadRoutes);
 router.use("/stats", statsRoutes);
 router.use("/calendar", calendarRoutes);
 router.use("/ai", aiRoutes);
+router.use("/orders", ordersRoutes);
+router.use("/market-orders", marketOrdersRoutes);
+router.use("/inventory", inventoryRoutes);
+router.use("/price-items", priceItemsRoutes);
+router.use("/handover-memos", handoverMemosRoutes);
+router.use("/drawings", drawingsRoutes);
+router.use("/sms", smsRoutes);
+router.use("/emails", emailsRoutes);
+router.use("/keywords", keywordsRoutes);
+router.use("/audit-logs", auditLogsRoutes);
 
 export default router;

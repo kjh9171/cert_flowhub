@@ -20,9 +20,14 @@
 | 지식 베이스 | 개인/팀 공간 분리, 1-Click 팀 승격, Markdown WYSIWYG 에디터, TOC 자동 생성, `?article=` 딥링크 |
 | 검색 | 문서·작업·피드·파일 통합 검색 (⌘K / Ctrl+K), 결과 클릭 시 `?task=` / `?article=` 딥링크로 해당 상세 자동 오픈 |
 | UX | 다크모드, 한/영 i18n, 실시간 뱃지(미읽음 수), 반응형(모바일 사이드바) |
+| 발주/수주 | 발주노트(품목·공급가/VAT·미수금·납기 D-Day) + **A4 발주서 인쇄**, 통합주문(스마트스토어/쿠팡, 송장 일괄 등록, 픽업 주문서 출력) |
+| 재고/단가 | 재고 +/- 즉시 조정, 안전재고 미만 필터, 이력(InventoryLog), 단가표 카테고리별 검색·인라인 수정 |
+| 현장/협업 | 전달사항(@발주 멘션 연결·사진 첨부·완료 체크), 도면 뷰어(DXF→SVG 자동 변환·줌/팬·두 점 치수 측정) |
+| 커뮤니케이션 | 비즈니스 문자(MMS 첨부·안읽음 필터), 메일(자동 라벨링: 미처리/거래처/세금계산서 + **원클릭 발주 전환**), 영업 키워드 순위 트래커 + 추천 |
+| 운영 | AuditLog(단가/재고/발주 상태 변경 이력), 워크스페이스 멤버십 기반 테넌트 격리 |
 
 ### 1.3 사용자 역할
-- `ADMIN` / `MEMBER` / `VIEWER` (워크스페이스·프로젝트 단위 권한 분리 — RBAC 가드는 로드맵)
+- `ADMIN` / `MEMBER` / `VIEWER` (워크스페이스·프로젝트 단위 권한 분리). ERP API는 모든 요청에서 워크스페이스 멤버십을 검증합니다.
 
 ---
 
@@ -109,7 +114,7 @@ cert_flowhub/
 │       ├── src/
 │       │   ├── lib/              # prisma, redis, jwt, notify
 │       │   ├── middleware/       # auth, webhook(HMAC)
-│       │   ├── modules/          # auth, user, workspace, project, task, feed, knowledge, integration, notification, search
+│       │   ├── modules/          # auth, user, workspace, project, task, feed, knowledge, integration, notification, search, orders, market-orders, inventory, price-items, handover-memos, drawings, sms, emails, keywords, audit-logs
 │       │   ├── realtime/         # socket gateway
 │       │   └── main.ts           # 라우트 등록 + 부트스트랩
 │       └── Dockerfile            # 컨테이너 기동 시 db push + seed 자동 실행 (아래 참고)
@@ -144,6 +149,16 @@ cert_flowhub/
 | notifications | `GET /notifications`, `PATCH /notifications/:id/read`, `POST /notifications/read-all` |
 | search | `GET /search?q=` (작업/문서/피드/파일 통합) |
 | uploads | `POST /uploads` (multipart, 최대 50MB — Nginx `client_max_body_size` 동일) |
+| orders | `GET/POST /orders`, `GET/PATCH/DELETE /orders/:id` (품목 일괄 교체, 상태/결제) |
+| market-orders | `GET/POST /market-orders`, `PATCH /market-orders/:id`, `PATCH /market-orders/bulk-ship` |
+| inventory | `GET/POST /inventory`, `PATCH /inventory/:id`, `POST /inventory/:id/adjust`, `GET /inventory/:id/logs` |
+| price-items | `GET/POST /price-items`, `PATCH /price-items/:id` (인라인 단가 수정) |
+| handover-memos | `GET/POST /handover-memos`, `PATCH /handover-memos/:id` (완료 체크) |
+| drawings | `GET /drawings`, `POST /drawings` (DXF→SVG 자동 변환), `GET /drawings/:id/svg` |
+| sms | `GET /sms/threads`, `GET /sms/threads/:id/messages`, `POST /sms/messages` |
+| emails | `GET /emails`, `PATCH /emails/:id`, `POST /emails/:id/to-order` (메일→발주 전환) |
+| keywords | `GET /keywords`, `GET /keywords/history`, `POST /keywords/track`, `GET /keywords/recommend` |
+| audit-logs | `GET /audit-logs?entity=` |
 
 ### 4.2 Socket.io 이벤트
 - Client → Server: `user:status`, `task:updated`, `badge:updated`, `notification:new`, `presence:refresh`
@@ -186,6 +201,19 @@ docker compose up -d --build
 
 개발용 핫 리로드는 `docker-compose.override.yml` 추가 후 `docker compose up`.
 
+### 운영 배포 (Production)
+
+```bash
+# 1. 운영 환경 변수 준비 (JWT_SECRET/POSTGRES_PASSWORD/REDIS_PASSWORD 필수 교체)
+#    CORS_ORIGIN을 운영 도메인으로 변경
+# 2. 필요 시 nginx/certs에 fullchain.pem/privkey.pem 배치 후 nginx.conf의 HTTPS 블록 활성화
+# 3. 운영 모드로 기동 (DB/Redis/백엔드/프론트엔드 비공개, Nginx만 80/443 공개)
+docker-compose -f docker-compose.prod.yml up -d --build
+```
+
+- `docker-compose.prod.yml`: DB/Redis/앱 포트를 호스트에 공개하지 않고, 컨테이너 로그 로테이션(10MB×3) 적용, `POSTGRES_PASSWORD`/`REDIS_PASSWORD`/`JWT_SECRET` 미설정 시 기동 거부.
+- 백업: `./scripts/backup.sh` (cron 등록 권장), 복구: `./scripts/restore.sh`
+
 ---
 
 ## 6. 서비스 워커(Service Worker) 캐시 정책 — 주의
@@ -218,6 +246,10 @@ Clean Light Mode + 다크모드 지원. 디자인 토큰, 레이아웃(AppShell/
 - [ ] "새 작업" 모달 → 생성 → 즉시 칸반에 카드 표시 (소켓 `task:updated{action:created}`)
 - [ ] 다크모드 토글, KO↔EN 토글
 - [ ] Nginx(:9090)와 프론트(:3100) 양쪽에서 실시간 갱신 모두 동작
+- [ ] 발주노트: 품목 추가→저장→인쇄(A4), 메일→발주 전환
+- [ ] 통합주문: 미발송 필터 → 체크 → 송장 일괄 등록
+- [ ] 재고: +/- 조정 → 안전재고 미만 품목 하이라이트
+- [ ] 도면: DXF 업로드 → SVG 생성 → 줌/팬/두 점 측정
 
 ---
 
@@ -226,8 +258,9 @@ Clean Light Mode + 다크모드 지원. 디자인 토큰, 레이아웃(AppShell/
 - **1단계 (완료)**: 아키텍처, docker-compose, Prisma 스키마, UI/UX 설계서
 - **2단계 (완료)**: Next.js 프론트엔드 모듈 (간트/칸반/캘린더/피드/지식 베이스/검색/알림)
 - **3단계 (완료)**: Prisma REST API + Socket.io 실시간 연동 + JWT 인증 + GitHub Webhook
-- **4단계 (진행)**: UI 깨짐/mock 데이터 전면 정리, ⌘K 검색·딥링크, 알림 패널/뱃지 동기화, 간트 드래그 저장, 빈 컬럼 드롭, 다크모드, i18n, 서비스 워커 API 캐시 제거
-- **5단계 (예정)**: RBAC 가드, 파일 업로드 E2E, 자동화 테스트, CI/CD, https 인증서 자동화
+- **4단계 (완료)**: UI 깨짐/mock 데이터 전면 정리, ⌘K 검색·딥링크, 간트 드래그 저장, 다크모드, i18n, 서비스 워커 API 캐시 제거
+- **4.5단계 (완료)**: ERP 확장 — 발주노트(A4 인쇄)/통합주문/단가표/재고관리/전달사항/도면 뷰어(DXF→SVG)/문자/메일(발주 전환)/영업 키워드 + 통합 월간 캘린더 + AuditLog + 워크스페이스 격리 + `docker-compose.prod.yml`
+- **5단계 (예정)**: RBAC 세분화, 파일 업로드 악성코드 검증, 자동화 테스트, CI/CD 강화, HTTPS 자동화
 
 ### 9.1 알려진 이슈 / 운영 주의
 - `NEXT_PUBLIC_*` 환경 변수는 **빌드 시점에 인라인**됩니다. 값을 바꾸면 `docker compose up -d --build flowhub-frontend`로 재빌드해야 반영됩니다.

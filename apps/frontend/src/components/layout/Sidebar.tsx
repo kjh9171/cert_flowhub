@@ -17,6 +17,15 @@ import {
   ChevronRight,
   Plus,
   Newspaper,
+  ClipboardList,
+  ShoppingCart,
+  Megaphone,
+  Tag,
+  Package,
+  DraftingCompass,
+  Smartphone,
+  Mail,
+  TrendingUp,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLayoutStore } from "@/stores/layoutStore";
@@ -24,7 +33,7 @@ import { useI18n } from "@/lib/i18n";
 import { useUserStore } from "@/stores/userStore";
 import api from "@/lib/api";
 
-const navItems = [
+const collabNavItems = [
   { href: "/", icon: LayoutDashboard, key: "dashboard" },
   { href: "/feed", icon: Newspaper, key: "feed" },
   { href: "/tasks", icon: Kanban, key: "tasks" },
@@ -32,8 +41,21 @@ const navItems = [
   { href: "/gantt", icon: GanttChart, key: "gantt" },
   { href: "/knowledge", icon: BookOpen, key: "knowledge" },
   { href: "/team", icon: Users, key: "team" },
-  { href: "/settings", icon: Settings, key: "settings" },
 ];
+
+const opsNavItems = [
+  { href: "/orders", icon: ClipboardList, key: "orders" },
+  { href: "/market-orders", icon: ShoppingCart, key: "marketOrders" },
+  { href: "/handover-memos", icon: Megaphone, key: "handover" },
+  { href: "/price-items", icon: Tag, key: "priceItems" },
+  { href: "/inventory", icon: Package, key: "inventory" },
+  { href: "/drawings", icon: DraftingCompass, key: "drawings" },
+  { href: "/sms", icon: Smartphone, key: "sms" },
+  { href: "/mail", icon: Mail, key: "mail" },
+  { href: "/keywords", icon: TrendingUp, key: "keywords" },
+];
+
+const adminNavItems = [{ href: "/settings", icon: Settings, key: "settings" }];
 
 export function Sidebar() {
   const { sidebarCollapsed, toggleSidebar, mobileSidebarOpen, closeMobileSidebar } = useLayoutStore();
@@ -56,7 +78,7 @@ export function Sidebar() {
       )}
       <aside
         className={cn(
-          "flex h-screen flex-col border-r border-slate-200 bg-white transition-all duration-200 dark:border-slate-800 dark:bg-slate-900",
+          "flex h-screen flex-col border-r border-line bg-card transition-all duration-200 dark:bg-card",
           // Desktop
           "md:relative md:translate-x-0",
           sidebarCollapsed ? "md:w-16" : "md:w-60",
@@ -65,7 +87,7 @@ export function Sidebar() {
           mobileSidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         )}
       >
-      <div className="flex h-14 items-center justify-between border-b border-slate-200 dark:border-slate-800 px-4">
+      <div className="flex h-14 items-center justify-between border-b border-line px-4">
         {!sidebarCollapsed && <span className="text-lg font-bold text-blue-600">FlowHub</span>}
         <button
           onClick={toggleSidebar}
@@ -76,15 +98,16 @@ export function Sidebar() {
       </div>
 
       <nav className="flex-1 overflow-y-auto p-2">
-        {navItems.map((item) => (
+        <NavGroup label={t("groupCollab")} collapsed={sidebarCollapsed} />
+        {collabNavItems.map((item) => (
           <SidebarLink key={item.href} href={item.href} icon={item.icon} label={t(item.key)} collapsed={sidebarCollapsed} />
         ))}
 
         {!sidebarCollapsed && (
-          <div className="mt-4">
-            <div className="mb-2 flex items-center justify-between px-2">
-              <span className="text-xs font-semibold uppercase text-slate-400">프로젝트</span>
-              <button className="text-slate-400 hover:text-blue-600">
+          <div className="mt-2">
+            <div className="mb-1 flex items-center justify-between px-3 pt-1">
+              <span className="text-[11px] font-semibold uppercase text-slate-400 dark:text-slate-500">프로젝트</span>
+              <button className="text-slate-400 hover:text-blue-600 dark:hover:text-blue-400">
                 <Plus className="h-3.5 w-3.5" />
               </button>
             </div>
@@ -93,7 +116,7 @@ export function Sidebar() {
                 key={p.id}
                 href="/projects"
                 onClick={closeMobileSidebar}
-                className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm text-slate-600 hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:bg-slate-100"
+                className="flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
               >
                 <span className="h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: p.color || "#2563EB" }} />
                 <span className="truncate">{p.name}</span>
@@ -101,9 +124,19 @@ export function Sidebar() {
             ))}
           </div>
         )}
+
+        <NavGroup label={t("groupOps")} collapsed={sidebarCollapsed} />
+        {opsNavItems.map((item) => (
+          <SidebarLink key={item.href} href={item.href} icon={item.icon} label={t(item.key)} collapsed={sidebarCollapsed} />
+        ))}
+
+        <NavGroup label={t("groupAdmin")} collapsed={sidebarCollapsed} />
+        {adminNavItems.map((item) => (
+          <SidebarLink key={item.href} href={item.href} icon={item.icon} label={t(item.key)} collapsed={sidebarCollapsed} />
+        ))}
       </nav>
 
-      <div className="border-t border-slate-200 dark:border-slate-800 p-3">
+      <div className="border-t border-line p-3">
         <button className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-800">
           <div className="flex h-7 w-7 items-center justify-center rounded-full bg-blue-100 text-xs font-semibold text-blue-700 dark:bg-blue-950 dark:text-blue-400">
             {currentUser?.name?.trim().charAt(0) ?? "FlowHub".charAt(0)}
@@ -113,6 +146,17 @@ export function Sidebar() {
       </div>
     </aside>
     </>
+  );
+}
+
+function NavGroup({ label, collapsed }: { label: string; collapsed: boolean }) {
+  if (collapsed) {
+    return <div className="mx-2 my-2 border-t border-line" aria-hidden="true" />;
+  }
+  return (
+    <div className="px-3 pb-1 pt-3 text-[11px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
+      {label}
+    </div>
   );
 }
 

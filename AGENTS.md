@@ -74,6 +74,19 @@ npm run build         # 프로덕션 빌드 (CI의 유일한 프론트 검증)
 - `.env`는 커밋 금지. `*.tsbuildinfo`는 gitignore됨.
 - 프론트 mock 데이터는 없앴습니다 — 화면에 예시 데이터가 보이면 **API 응답/프록시를 의심**하세요 (`/api` 404 → 로그인 401 루프가 과거에 있었음).
 
+## ERP 확장 구조 (Step 1~4 완료)
+
+- ERP 도메인은 `schema.prisma` 하단 (`OrderNote`, `OrderItem`, `MarketOrder`, `HandoverMemo`, `PriceItem`, `InventoryItem`, `InventoryLog`, `DrawingFile`, `SmsThread/SmsMessage`, `BusinessEmail`, `KeywordRank`, `AuditLog`)에 추가되어 있으며 **모든 ERP 라우트는 `resolveWorkspaceId`(워크스페이스 멤버십 검증)를 강제**합니다.
+- 백엔드 모듈: `src/modules/{orders, market-orders, inventory, price-items, handover-memos, drawings, sms, emails, keywords, audit-logs}` → `src/routes/index.ts`에 등록됨.
+- 프론트 ERP 페이지: `/orders`(발주+A4 인쇄), `/market-orders`, `/handover-memos`, `/price-items`, `/inventory`, `/drawings`, `/sms`, `/mail`, `/keywords`. 공용 컴포넌트 `src/components/erp/` (`labels.ts`, `SlideOver`, `OrderPrintSheet`), 사이드바는 [협업 & 프로젝트]/[수주 & 현장 운영]/[관리] 3그룹.
+- **DXF→SVG 변환은 자체 파서**(`src/lib/dxf.ts`, LINE/CIRCLE/ARC/LWPOLYLINE/TEXT만 지원)로 백엔드가 변환 후 `/uploads/drawings/`에 저장. DWG/AI는 변환 불가(원본만 보관, `status: UNSUPPORTED`).
+- 메일→발주 전환(`POST /emails/:id/to-order`)은 거래처명=fromName, 첫 품목=제목으로 OrderNote를 생성합니다.
+- 감사 로그는 `lib/audit.ts`의 `logAudit()`을 ERP 변경 엔드포인트에서 best-effort 호출합니다 (`GET /audit-logs?entity=INVENTORY`).
+- 문자 발송은 **시뮬레이션**(실제 통신사 게이트웨이 미연동). 수신은 `POST /sms/threads/:id/receive`로 시뮬레이션 가능.
+- 운영 배포는 `docker-compose.prod.yml` (DB/Redis/앱 포트 비공개, Nginx만 공개, 로그 로테이션). 기본 `docker-compose.yml`은 개발용 (포트 전부 공개).
+- 시드 ERP 데모 데이터를 포함합니다 (발주 2건, 통합주문 6건, 재고 8건 등). 기본 시드와 독립적으로 멱등 실행됨.
+- 주의: A4 인쇄 버튼(`window.print()`)을 브라우저 자동화로 클릭하면 네이티브 인쇄 대화상자가 열려 페이지 JS가 블록됩니다 (orca 재개 불가 — 인쇄 검증 시 자동화 클릭 금지).
+
 ## 문서
 - `README.md` — 포트/실행/환경변수/서비스워커 정책/수동 E2E 체크리스트 (현행, 신뢰 가능)
 - `docs/ui-ux-design.md` — 디자인 시스템 상세

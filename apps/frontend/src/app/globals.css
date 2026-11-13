@@ -4,6 +4,21 @@
 
 :root {
   --font-sans: "Pretendard", "Inter", system-ui, sans-serif;
+  /* 시맨틱 컬러 토큰 — Light */
+  --canvas: #f8fafc; /* 배경 */
+  --card: #ffffff; /* 카드 표면 */
+  --line: #e2e8f0; /* 보더 */
+  --ink: #0f172a; /* 주 텍스트 */
+  --ink-2: #475569; /* 보조 텍스트 */
+}
+
+.dark {
+  /* 시맨틱 컬러 토큰 — Dark */
+  --canvas: #090d16; /* 배경 (딥 네이비) */
+  --card: #111827; /* 카드 표면 */
+  --line: #1f2937; /* 보더 */
+  --ink: #f8fafc; /* 주 텍스트 */
+  --ink-2: #94a3b8; /* 보조 텍스트 */
 }
 
 html,
@@ -12,15 +27,10 @@ body {
 }
 
 body {
-  background-color: #f8fafc;
-  color: #0f172a;
+  background-color: var(--canvas);
+  color: var(--ink);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
-}
-
-.dark body {
-  background-color: #0f172a;
-  color: #e2e8f0;
 }
 
 /* 스크롤바 스타일 */
@@ -37,5 +47,57 @@ body {
 }
 
 .dark ::-webkit-scrollbar-thumb {
-  background: #475569;
+  background: #334155;
+}
+
+/* ─────────────────────────────────────────────
+   인쇄 전용 (발주서/작업지시서 A4 출력)
+   .print-area만 보이고 나머지는 모두 숨긴다
+   ───────────────────────────────────────────── */
+.print-area {
+  display: none;
+}
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 14mm 12mm;
+  }
+  body {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  body * {
+    visibility: hidden;
+  }
+  .print-area,
+  .print-area * {
+    visibility: visible;
+  }
+  .print-area {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 8px 4px;
+    font-size: 11pt;
+    color: #0f172a;
+  }
+  .print-area table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .print-area th,
+  .print-area td {
+    border: 1px solid #94a3b8;
+    padding: 6px 8px;
+    font-size: 10pt;
+  }
+  .print-area thead th {
+    background: #f1f5f9 !important;
+    font-weight: 700;
+  }
 }

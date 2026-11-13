@@ -9,6 +9,12 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        // 시맨틱 토큰 — globals.css의 CSS 변수와 1:1 (라이트/다크 자동 동기화)
+        canvas: "var(--canvas)",
+        card: "var(--card)",
+        line: "var(--line)",
+        ink: "var(--ink)",
+        ink2: "var(--ink-2)",
         brand: {
           primary: "#2563EB",
           "primary-soft": "#DBEAFE",

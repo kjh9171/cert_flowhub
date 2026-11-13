@@ -144,6 +144,9 @@ model User {
   integrationBadges  IntegrationBadge[]  @relation("BadgeActor")
   notifications      Notification[]
   mentions           Mention[]
+  authoredOrderNotes  OrderNote[]    @relation("OrderNoteAuthor")
+  authoredHandoverMemos HandoverMemo[] @relation("HandoverMemoAuthor")
+  uploadedDrawings    DrawingFile[]  @relation("DrawingUploader")
 
   @@index([email])
   @@index([status])
@@ -166,6 +169,16 @@ model Workspace {
   posts      FeedPost[]
   articles   KnowledgeArticle[]
   badges     IntegrationBadge[]
+  orderNotes       OrderNote[]
+  marketOrders     MarketOrder[]
+  handoverMemos    HandoverMemo[]
+  priceItems       PriceItem[]
+  inventoryItems   InventoryItem[]
+  drawingFiles     DrawingFile[]
+  smsThreads       SmsThread[]
+  businessEmails   BusinessEmail[]
+  keywordRanks     KeywordRank[]
+  auditLogs        AuditLog[]
 
   @@index([ownerId])
   @@map("workspaces")
@@ -259,6 +272,7 @@ model Task {
   attachments   Attachment[]
   badges        IntegrationBadge[]
   mentions      Mention[]
+  orderNotes    OrderNote[]
 
   @@index([projectId])
   @@index([workspaceId])
@@ -513,4 +527,319 @@ model Notification {
   @@index([userId, isRead])
   @@index([createdAt])
   @@map("notifications")
+}
+
+
+// ─────────────────────────────────────────────
+// ERP 확장 도메인 (수주/현장 운영)
+// ─────────────────────────────────────────────
+
+enum InventoryKind {
+  RAW     // 원자재
+  PRODUCT // 제품
+}
+
+enum OrderStatus {
+  CONFIRMED     // 확정/접수
+  IN_PRODUCTION // 생산중
+  READY         // 준비완료
+  SHIPPED       // 발송
+  DELIVERED     // 납품완료
+  CANCELLED     // 취소
+}
+
+enum PaymentStatus {
+  UNPAID  // 미수금
+  PARTIAL // 일부 수령
+  PAID    // 입금 완료
+  REFUNDED // 환불
+}
+
+enum MarketPlatform {
+  SMARTSTORE // 네이버 스마트스토어
+  COUPANG    // 쿠팡
+  OTHER      // 기타
+}
+
+enum MarketOrderStatus {
+  PENDING   // 신규(미발송)
+  PREPARING // 배송준비
+  SHIPPING  // 발송(배송중)
+  DELIVERED // 완료
+  CANCELLED // 취소
+}
+
+enum SmsDirection {
+  IN  // 수신
+  OUT // 발신
+}
+
+enum EmailClassification {
+  UNHANDLED    // 미처리
+  VENDOR       // 거래처
+  TAX_INVOICE  // 세금계산서
+  OTHER        // 기타
+}
+
+model OrderNote {
+  id            String        @id @default(cuid())
+  workspaceId   String
+  workspace     Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  orderNo       String        @unique // 발주번호 (예: PO-2026-0001)
+  partnerName   String        // 거래처명
+  partnerContact String?      // 거래처 담당자 연락처
+  status        OrderStatus   @default(CONFIRMED)
+  paymentStatus PaymentStatus @default(UNPAID)
+  supplyAmount  Int           @default(0) // 공급가 합계 (원)
+  vatAmount     Int           @default(0) // VAT
+  totalAmount   Int           @default(0) // 합계
+  dueDate       DateTime?     // 납기일
+  shippedAt     DateTime?
+  memo          String?       @db.Text
+  taskId        String?       // 연결된 작업
+  task          Task?         @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  drawingId     String?       // 연결된 도면
+  drawing       DrawingFile?  @relation(fields: [drawingId], references: [id], onDelete: SetNull)
+  authorId      String
+  author        User          @relation("OrderNoteAuthor", fields: [authorId], references: [id])
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  items         OrderItem[]
+  handoverMemos HandoverMemo[]
+
+  @@index([workspaceId])
+  @@index([partnerName])
+  @@index([status])
+  @@index([paymentStatus])
+  @@index([dueDate])
+  @@map("order_notes")
+}
+
+model OrderItem {
+  id          String    @id @default(cuid())
+  orderNoteId String
+  orderNote   OrderNote @relation(fields: [orderNoteId], references: [id], onDelete: Cascade)
+  name        String    // 품목명
+  spec        String?   // 규격
+  qty         Float
+  unit        String    @default("EA") // 단위 (EA, kg, box ...)
+  unitPrice   Int       @default(0)
+  amount      Int       @default(0) // qty * unitPrice
+  note        String?
+
+  @@index([orderNoteId])
+  @@map("order_items")
+}
+
+model MarketOrder {
+  id              String            @id @default(cuid())
+  workspaceId     String
+  workspace       Workspace         @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  platform        MarketPlatform
+  orderNo         String            // 오픈마켓 주문번호 (플랫폼 내 유일)
+  buyerName       String            // 구매자
+  buyerPhone      String?
+  productName     String
+  qty             Int               @default(1)
+  price           Int               @default(0)
+  isPrepaid       Boolean           @default(true) // true: 선불 / false: 착불
+  recipientName   String            // 수령인
+  recipientAddress String           @db.Text
+  recipientPhone  String?
+  status          MarketOrderStatus @default(PENDING)
+  shippedAt       DateTime?         // 발송일
+  trackingNo      String?           // 송장번호
+  dueDate         DateTime?         // 발송기한
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  @@unique([workspaceId, platform, orderNo])
+  @@index([workspaceId])
+  @@index([status])
+  @@index([platform])
+  @@index([dueDate])
+  @@map("market_orders")
+}
+
+model HandoverMemo {
+  id           String    @id @default(cuid())
+  workspaceId  String
+  workspace    Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  authorId     String
+  author       User      @relation("HandoverMemoAuthor", fields: [authorId], references: [id])
+  content      String    @db.Text
+  done         Boolean   @default(false)
+  photos       String[]  @default([]) // 첨부 사진 URL
+  orderNoteId  String?   // @발주 멘션 연결
+  orderNote    OrderNote? @relation(fields: [orderNoteId], references: [id], onDelete: SetNull)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([workspaceId])
+  @@index([done])
+  @@index([createdAt])
+  @@map("handover_memos")
+}
+
+model PriceItem {
+  id          String    @id @default(cuid())
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  category    String    // 대분류
+  bundle      String?   // 묶음 (묶음판매 그룹)
+  name        String
+  unitPrice   Int       @default(0) // 단가 (원)
+  note        String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([workspaceId])
+  @@index([category])
+  @@index([name])
+  @@map("price_items")
+}
+
+model InventoryItem {
+  id          String        @id @default(cuid())
+  workspaceId String
+  workspace   Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  sku         String?       // 상품/자재 코드
+  name        String
+  kind        InventoryKind @default(PRODUCT)
+  unit        String        @default("EA")
+  qty         Float         @default(0) // 현재고
+  safetyQty   Float         @default(0) // 안전재고 (이 값 이하 → 부족)
+  note        String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  logs        InventoryLog[]
+
+  @@index([workspaceId])
+  @@index([name])
+  @@index([kind])
+  @@map("inventory_items")
+}
+
+model InventoryLog {
+  id        String        @id @default(cuid())
+  itemId    String
+  item      InventoryItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  delta     Float         // +입고 / -출고 / 조정분
+  after     Float         // 적용 후 잔고
+  reason    String?
+  actorId   String?
+  createdAt DateTime      @default(now())
+
+  @@index([itemId])
+  @@index([createdAt])
+  @@map("inventory_logs")
+}
+
+model DrawingFile {
+  id           String    @id @default(cuid())
+  workspaceId  String
+  workspace    Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  fileName     String
+  fileUrl      String    // 원본 경로
+  svgUrl       String?   // 변환된 SVG (DXF → SVG 자동 변환 성공 시)
+  mimeType     String
+  size         Int
+  status       String    @default("READY") // READY | CONVERTING | UNSUPPORTED
+  uploaderId   String
+  uploader     User      @relation("DrawingUploader", fields: [uploaderId], references: [id])
+  createdAt    DateTime  @default(now())
+
+  orderNotes   OrderNote[]
+
+  @@index([workspaceId])
+  @@index([createdAt])
+  @@map("drawing_files")
+}
+
+model SmsThread {
+  id              String      @id @default(cuid())
+  workspaceId     String
+  workspace       Workspace   @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  participantName String?     // 거래처명
+  participantPhone String
+  lastMessageAt   DateTime    @default(now())
+  unreadCount     Int         @default(0)
+  createdAt       DateTime    @default(now())
+
+  messages        SmsMessage[]
+
+  @@unique([workspaceId, participantPhone])
+  @@index([workspaceId])
+  @@index([lastMessageAt])
+  @@map("sms_threads")
+}
+
+model SmsMessage {
+  id          String      @id @default(cuid())
+  threadId    String
+  thread      SmsThread   @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  direction   SmsDirection
+  content     String      @db.Text
+  attachments String[]    @default([]) // MMS 첨부 이미지
+  isRead      Boolean     @default(true)
+  createdAt   DateTime    @default(now())
+
+  @@index([threadId])
+  @@index([createdAt])
+  @@map("sms_messages")
+}
+
+model BusinessEmail {
+  id             String              @id @default(cuid())
+  workspaceId    String
+  workspace      Workspace           @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  fromName       String
+  fromEmail      String
+  subject        String
+  snippet        String?             @db.Text
+  classification EmailClassification @default(UNHANDLED)
+  isRead         Boolean             @default(false)
+  receivedAt     DateTime
+  createdAt      DateTime            @default(now())
+
+  @@index([workspaceId])
+  @@index([classification])
+  @@index([receivedAt])
+  @@map("business_emails")
+}
+
+model KeywordRank {
+  id               String    @id @default(cuid())
+  workspaceId      String
+  workspace        Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  keyword          String
+  position         Float     // 현재 순위 (낮을수록 상위, 미노출 = 0)
+  previousPosition Float?    // 이전 측정치 (추천 로직용)
+  postUrl          String?
+  postTitle        String?
+  trackedAt        DateTime  @default(now())
+
+  @@index([workspaceId])
+  @@index([keyword])
+  @@index([trackedAt])
+  @@map("keyword_ranks")
+}
+
+model AuditLog {
+  id          String    @id @default(cuid())
+  workspaceId String?
+  workspace   Workspace? @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  userId      String?
+  action      String    // CREATE | UPDATE | DELETE | ADJUST | STATUS
+  entity      String    // ORDER_NOTE | INVENTORY | PRICE_ITEM | MARKET_ORDER ...
+  entityId    String?
+  summary     String    @db.Text
+  createdAt   DateTime  @default(now())
+
+  @@index([workspaceId])
+  @@index([entity])
+  @@index([createdAt])
+  @@map("audit_logs")
 }

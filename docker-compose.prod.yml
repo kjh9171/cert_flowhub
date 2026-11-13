@@ -1,0 +1,158 @@
+# FlowHub 운영(Production) 전용 Compose
+# 실행: docker-compose -f docker-compose.prod.yml up -d --build
+#
+# 기본 docker-compose.yml과의 차이:
+#   - DB/Redis/백엔드/프론트엔드를 호스트에 공개하지 않음 (Nginx만 80/443 공개)
+#   - 컨테이너 로그 로테이션 (json-file, 10MB × 3개)
+#   - 헬스체크/재시작 정책 전 서비스 적용
+#   - NODE_ENV=production 고정
+#
+# 사전 준비:
+#   - .env 의 JWT_SECRET / POSTGRES_PASSWORD / REDIS_PASSWORD를 강력한 랜덤 값으로 교체
+#   - nginx/certs/fullchain.pem, privkey.pem 배치 후 nginx.conf의 HTTPS 블록 활성화
+
+services:
+  flowhub-db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-flowhub}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD를 .env에 설정하세요}
+      POSTGRES_DB: ${POSTGRES_DB:-flowhub}
+    # 호스트 포트 미공개 — flowhub-net 내부 통신만 허용
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-flowhub} -d ${POSTGRES_DB:-flowhub}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - flowhub-net
+
+  flowhub-redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:?REDIS_PASSWORD를 .env에 설정하세요}
+    # 호스트 포트 미공개
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - flowhub-net
+
+  flowhub-backend:
+    build:
+      context: ./apps/backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      flowhub-db:
+        condition: service_healthy
+      flowhub-redis:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      DATABASE_URL: postgresql://${POSTGRES_USER:-flowhub}:${POSTGRES_PASSWORD}@flowhub-db:5432/${POSTGRES_DB:-flowhub}?schema=public
+      REDIS_URL: redis://:${REDIS_PASSWORD}@flowhub-redis:6379
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET을 .env에 설정하세요}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost}
+      GITHUB_WEBHOOK_SECRET: ${GITHUB_WEBHOOK_SECRET:-}
+      SENTRY_DSN: ${SENTRY_DSN:-}
+    # 호스트 포트 미공개 — Nginx(:9090/:80/:443) 경유만 허용
+    volumes:
+      - backend_uploads:/app/uploads
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://localhost:4000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - flowhub-net
+
+  flowhub-frontend:
+    build:
+      context: ./apps/frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-/api}
+        NEXT_PUBLIC_SOCKET_URL: ${NEXT_PUBLIC_SOCKET_URL:-}
+    restart: unless-stopped
+    depends_on:
+      flowhub-backend:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-/api}
+      NEXT_PUBLIC_SOCKET_URL: ${NEXT_PUBLIC_SOCKET_URL:-}
+    # 호스트 포트 미공개 — Nginx 경유만 허용
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://localhost:3000/').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - flowhub-net
+
+  flowhub-proxy:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    depends_on:
+      flowhub-frontend:
+        condition: service_healthy
+      flowhub-backend:
+        condition: service_healthy
+    ports:
+      - "${HTTP_PORT:-80}:80"
+      - "${HTTPS_PORT:-443}:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx/certs:/etc/nginx/certs:ro
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - flowhub-net
+
+volumes:
+  pg_data:
+    driver: local
+  redis_data:
+    driver: local
+  backend_uploads:
+    driver: local
+
+networks:
+  flowhub-net:
+    driver: bridge

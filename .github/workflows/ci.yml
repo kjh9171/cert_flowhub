@@ -39,7 +39,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - run: npm ci
+      # 앱 디렉터리에 package-lock.json이 없으므로 npm ci 대신 npm install 사용
+      - run: npm install
       - run: npx prisma generate
       - run: npx prisma db push --accept-data-loss --skip-generate
       - run: npm run build
@@ -55,7 +56,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - run: npm ci
+      # 앱 디렉터리에 package-lock.json이 없으므로 npm ci 대신 npm install 사용
+      - run: npm install
       - run: npm run build
 
   docker:

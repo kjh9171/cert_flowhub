@@ -180,3 +180,183 @@ export interface BadgeEventPayload {
   /** 삭제 이벤트일 때의 대상 ID */
   badgeId?: string;
 }
+
+// ─────────────────────────────────────────────
+// ERP 확장 도메인 타입 (수주/현장 운영)
+// ─────────────────────────────────────────────
+
+export type InventoryKind = "RAW" | "PRODUCT";
+export type OrderStatus = "CONFIRMED" | "IN_PRODUCTION" | "READY" | "SHIPPED" | "DELIVERED" | "CANCELLED";
+export type PaymentStatus = "UNPAID" | "PARTIAL" | "PAID" | "REFUNDED";
+export type MarketPlatform = "SMARTSTORE" | "COUPANG" | "OTHER";
+export type MarketOrderStatus = "PENDING" | "PREPARING" | "SHIPPING" | "DELIVERED" | "CANCELLED";
+export type SmsDirection = "IN" | "OUT";
+export type EmailClassification = "UNHANDLED" | "VENDOR" | "TAX_INVOICE" | "OTHER";
+
+export interface OrderItem {
+  id?: string;
+  name: string;
+  spec?: string | null;
+  qty: number;
+  unit: string;
+  unitPrice: number;
+  amount?: number;
+  note?: string | null;
+}
+
+export interface OrderNote {
+  id: string;
+  workspaceId: string;
+  orderNo: string;
+  partnerName: string;
+  partnerContact?: string | null;
+  status: OrderStatus;
+  paymentStatus: PaymentStatus;
+  supplyAmount: number;
+  vatAmount: number;
+  totalAmount: number;
+  dueDate?: string | null;
+  memo?: string | null;
+  taskId?: string | null;
+  task?: { id: string; title: string; status: string; progress?: number } | null;
+  drawingId?: string | null;
+  drawing?: { id: string; fileName: string; svgUrl?: string | null; status: string } | null;
+  author?: { id: string; name: string } | null;
+  items: OrderItem[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface MarketOrder {
+  id: string;
+  workspaceId: string;
+  platform: MarketPlatform;
+  orderNo: string;
+  buyerName: string;
+  buyerPhone?: string | null;
+  productName: string;
+  qty: number;
+  price: number;
+  isPrepaid: boolean;
+  recipientName: string;
+  recipientAddress: string;
+  recipientPhone?: string | null;
+  status: MarketOrderStatus;
+  shippedAt?: string | null;
+  trackingNo?: string | null;
+  dueDate?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface InventoryItem {
+  id: string;
+  workspaceId: string;
+  sku?: string | null;
+  name: string;
+  kind: InventoryKind;
+  unit: string;
+  qty: number;
+  safetyQty: number;
+  note?: string | null;
+  updatedAt: string;
+  _count?: { logs: number };
+}
+
+export interface PriceItem {
+  id: string;
+  workspaceId: string;
+  category: string;
+  bundle?: string | null;
+  name: string;
+  unitPrice: number;
+  note?: string | null;
+  updatedAt: string;
+}
+
+export interface HandoverMemo {
+  id: string;
+  workspaceId: string;
+  authorId: string;
+  author?: { id: string; name: string } | null;
+  content: string;
+  done: boolean;
+  photos: string[];
+  orderNoteId?: string | null;
+  orderNote?: { id: string; orderNo: string; partnerName: string } | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DrawingFile {
+  id: string;
+  workspaceId: string;
+  fileName: string;
+  fileUrl: string;
+  svgUrl?: string | null;
+  mimeType: string;
+  size: number;
+  status: "READY" | "CONVERTING" | "UNSUPPORTED";
+  uploader?: { id: string; name: string } | null;
+  createdAt: string;
+}
+
+export interface SmsThread {
+  id: string;
+  workspaceId: string;
+  participantName?: string | null;
+  participantPhone: string;
+  lastMessageAt: string;
+  unreadCount: number;
+  messages?: Array<{ id: string; content: string; direction: SmsDirection; createdAt: string }>;
+}
+
+export interface SmsMessage {
+  id: string;
+  threadId: string;
+  direction: SmsDirection;
+  content: string;
+  attachments: string[];
+  isRead: boolean;
+  createdAt: string;
+}
+
+export interface BusinessEmail {
+  id: string;
+  workspaceId: string;
+  fromName: string;
+  fromEmail: string;
+  subject: string;
+  snippet?: string | null;
+  classification: EmailClassification;
+  isRead: boolean;
+  receivedAt: string;
+}
+
+export interface KeywordRankSummary {
+  keyword: string;
+  position: number;
+  previousPosition: number | null;
+  delta: number | null; // +면 순위 상승
+  postUrl?: string | null;
+  postTitle?: string | null;
+  trackedAt: string;
+  historyCount: number;
+}
+
+export interface KeywordRecommendation {
+  reason: string;
+  keyword: string;
+  titles: string[];
+}
+
+export interface AuditLogEntry {
+  id: string;
+  workspaceId?: string | null;
+  userId?: string | null;
+  action: string;
+  entity: string;
+  entityId?: string | null;
+  summary: string;
+  createdAt: string;
+}

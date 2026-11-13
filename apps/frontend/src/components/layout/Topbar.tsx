@@ -97,7 +97,7 @@ export function Topbar({ onSearchOpen, onNotificationOpen, unreadCount = 0 }: To
   };
 
   return (
-    <header className="relative z-[45] flex h-14 shrink-0 items-center justify-between border-b border-slate-200 bg-white px-4 dark:border-slate-800 dark:bg-slate-900">
+    <header className="relative z-[45] flex h-14 shrink-0 items-center justify-between border-b border-line bg-card px-4">
       <div className="flex shrink-0 items-center gap-3">
         <button
           onClick={openMobileSidebar}

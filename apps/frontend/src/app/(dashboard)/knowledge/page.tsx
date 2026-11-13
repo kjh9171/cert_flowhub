@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import api from "@/lib/api";
 import { KnowledgeEditor } from "@/components/knowledge/KnowledgeEditor";
 import { Button } from "@/components/ui/Button";
@@ -27,6 +27,20 @@ export default function KnowledgePage() {
   useEffect(() => {
     load();
   }, []);
+
+  // ?article=<id> 진입 시 해당 문서 자동 선택 (검색 결과 딥링크)
+  const deepLinkedRef = useRef(false);
+  useEffect(() => {
+    if (deepLinkedRef.current) return;
+    const id = new URLSearchParams(window.location.search).get("article");
+    if (!id) return;
+    const found = articles.find((a) => a.id === id);
+    if (found) {
+      deepLinkedRef.current = true;
+      selectArticle(found);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [articles]);
 
   const selectArticle = (a: KnowledgeArticle) => {
     setSelected(a);

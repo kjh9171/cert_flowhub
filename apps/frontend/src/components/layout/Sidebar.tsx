@@ -16,13 +16,17 @@ import {
   ChevronLeft,
   ChevronRight,
   Plus,
+  Newspaper,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLayoutStore } from "@/stores/layoutStore";
 import { useI18n } from "@/lib/i18n";
+import { useUserStore } from "@/stores/userStore";
+import api from "@/lib/api";
 
 const navItems = [
   { href: "/", icon: LayoutDashboard, key: "dashboard" },
+  { href: "/feed", icon: Newspaper, key: "feed" },
   { href: "/tasks", icon: Kanban, key: "tasks" },
   { href: "/calendar", icon: Calendar, key: "calendar" },
   { href: "/gantt", icon: GanttChart, key: "gantt" },
@@ -31,14 +35,15 @@ const navItems = [
   { href: "/settings", icon: Settings, key: "settings" },
 ];
 
-const projects = [
-  { id: "p1", name: "FlowHub 플랫폼", color: "#2563EB" },
-  { id: "p2", name: "지식 베이스", color: "#16A34A" },
-];
-
 export function Sidebar() {
   const { sidebarCollapsed, toggleSidebar, mobileSidebarOpen, closeMobileSidebar } = useLayoutStore();
   const { t } = useI18n();
+  const currentUser = useUserStore((s) => s.currentUser);
+  // 실제 프로젝트 목록 (지식 베이스 폴더가 아니라 /projects API의 프로젝트들)
+  const [projects, setProjects] = React.useState<Array<{ id: string; name: string; color?: string }>>([]);
+  React.useEffect(() => {
+    api.get("/projects").then((res) => setProjects(res.data || [])).catch(() => {});
+  }, []);
 
   return (
     <>
@@ -84,13 +89,15 @@ export function Sidebar() {
               </button>
             </div>
             {projects.map((p) => (
-              <button
+              <Link
                 key={p.id}
-                className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm text-slate-600 hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-800"
+                href="/projects"
+                onClick={closeMobileSidebar}
+                className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm text-slate-600 hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:bg-slate-100"
               >
-                <span className="h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: p.color }} />
+                <span className="h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: p.color || "#2563EB" }} />
                 <span className="truncate">{p.name}</span>
-              </button>
+              </Link>
             ))}
           </div>
         )}
@@ -98,10 +105,10 @@ export function Sidebar() {
 
       <div className="border-t border-slate-200 dark:border-slate-800 p-3">
         <button className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-800">
-          <div className="h-7 w-7 rounded-full bg-blue-100 text-center text-xs font-semibold leading-7 text-blue-700">
-            홍
+          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-blue-100 text-xs font-semibold text-blue-700 dark:bg-blue-950 dark:text-blue-400">
+            {currentUser?.name?.trim().charAt(0) ?? "FlowHub".charAt(0)}
           </div>
-          {!sidebarCollapsed && <span className="truncate">홍길동</span>}
+          {!sidebarCollapsed && <span className="truncate">{currentUser?.name ?? "사용자"}</span>}
         </button>
       </div>
     </aside>

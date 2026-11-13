@@ -8,6 +8,7 @@ import {
   DragOverlay,
   closestCorners,
   PointerSensor,
+  useDroppable,
   useSensor,
   useSensors,
   type DragEndEvent,
@@ -27,13 +28,24 @@ const columns: { key: TaskStatus; label: string; color: string }[] = [
   { key: "DONE", label: "완료", color: "border-t-green-500" },
 ];
 
+// 연동 이벤트 타입별 짧은 라벨 (카드 Badge용)
+const badgeEventLabel: Record<string, string> = {
+  COMMIT: "커밋",
+  PULL_REQUEST: "PR",
+  CI_CD: "CI/CD",
+  DEPLOY: "배포",
+  EXTERNAL_API: "API",
+};
+
 interface KanbanBoardProps {
   tasks: Task[];
   onStatusChange: (taskId: string, status: TaskStatus) => void;
   onTaskClick?: (task: Task) => void;
+  /** 담당자 ID → 이름 매핑 (아바타 이니셜용). 없으면 ID 첫글자로 fallback */
+  userMap?: Record<string, { name: string }>;
 }
 
-export function KanbanBoard({ tasks, onStatusChange, onTaskClick }: KanbanBoardProps) {
+export function KanbanBoard({ tasks, onStatusChange, onTaskClick, userMap }: KanbanBoardProps) {
   const [activeId, setActiveId] = useState<string | null>(null);
 
   const sensors = useSensors(
@@ -74,7 +86,10 @@ export function KanbanBoard({ tasks, onStatusChange, onTaskClick }: KanbanBoardP
     >
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
         {columns.map((col) => {
-          const colTasks = tasks.filter((t) => t.status === col.key);
+          // position 필드로 정렬된 카드 목록 (드래그 순서 유지용)
+          const colTasks = [...tasks.filter((t) => t.status === col.key)].sort(
+            (a, b) => (a.position ?? 0) - (b.position ?? 0)
+          );
           return (
             <div
               key={col.key}
@@ -93,27 +108,7 @@ export function KanbanBoard({ tasks, onStatusChange, onTaskClick }: KanbanBoardP
                 items={colTasks.map((t) => t.id)}
                 strategy={verticalListSortingStrategy}
               >
-                <div
-                  className="flex-1 space-y-2 p-2 min-h-[200px]"
-                  data-column={col.key}
-                >
-                  {colTasks.map((t) => (
-                    <KanbanCard
-                      key={t.id}
-                      task={t}
-                      onClick={() => onTaskClick?.(t)}
-                    />
-                  ))}
-                  {/* Drop zone marker for empty columns */}
-                  {colTasks.length === 0 && (
-                    <div
-                      id={col.key}
-                      className="flex h-24 items-center justify-center rounded-md border-2 border-dashed border-slate-200 dark:border-slate-800 text-xs text-slate-400 dark:border-slate-700 dark:text-slate-500 dark:text-slate-400"
-                    >
-                      여기에 드롭
-                    </div>
-                  )}
-                </div>
+                <ColumnDropZone id={col.key} colItems={colTasks} userMap={userMap} onTaskClick={onTaskClick} />
               </SortableContext>
             </div>
           );
@@ -127,14 +122,56 @@ export function KanbanBoard({ tasks, onStatusChange, onTaskClick }: KanbanBoardP
   );
 }
 
+/** 컬럼 드롭 영역 — useDroppable로 빈 영역에도 드롭 가능하게 함 */
+function ColumnDropZone({
+  id,
+  colItems,
+  userMap,
+  onTaskClick,
+}: {
+  id: TaskStatus;
+  colItems: Task[];
+  userMap?: Record<string, { name: string }>;
+  onTaskClick?: (task: Task) => void;
+}) {
+  const { setNodeRef, isOver } = useDroppable({ id });
+  return (
+    <div
+      ref={setNodeRef}
+      className={cn(
+        "min-h-[200px] flex-1 space-y-2 rounded-b-lg p-2 transition-colors",
+        isOver && "bg-blue-50 dark:bg-blue-950/30"
+      )}
+      data-column={id}
+    >
+      {colItems.map((t) => (
+        <KanbanCard
+          key={t.id}
+          task={t}
+          userMap={userMap}
+          onClick={() => onTaskClick?.(t)}
+        />
+      ))}
+      {/* Drop zone marker for empty columns */}
+      {colItems.length === 0 && (
+        <div className="flex h-24 items-center justify-center rounded-md border-2 border-dashed border-slate-300 text-xs text-slate-400 dark:border-slate-700 dark:text-slate-500">
+          여기에 드롭
+        </div>
+      )}
+    </div>
+  );
+}
+
 function KanbanCard({
   task,
   onClick,
   dragging = false,
+  userMap,
 }: {
   task: Task;
   onClick?: () => void;
   dragging?: boolean;
+  userMap?: Record<string, { name: string }>;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: task.id,
@@ -178,7 +215,7 @@ function KanbanCard({
             <p className="mb-2 line-clamp-2 text-xs text-slate-500 dark:text-slate-400">{task.content}</p>
           )}
           <div className="flex items-center justify-between">
-            <AvatarStackPlaceholder assigneeIds={task.assigneeIds} />
+            <AvatarStack userIds={task.assigneeIds} userMap={userMap} />
             <div className="flex items-center gap-1.5">
               {task.endDate && (
                 <span className="inline-flex items-center gap-1 text-[11px] text-slate-400">
@@ -196,27 +233,55 @@ function KanbanCard({
               />
             </div>
           )}
+          {/* 연동 상태 Badge (GitHub/CI/CD/API - 실시간 반영) */}
+          {task.badges && task.badges.length > 0 && (
+            <div className="mt-2 flex flex-wrap items-center gap-1">
+              {task.badges.slice(0, 3).map((b, i) => (
+                <IntegrationBadge
+                  key={i}
+                  status={b.status}
+                  eventType={b.eventType}
+                  title={badgeEventLabel[b.eventType]}
+                  size="sm"
+                />
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>
   );
 }
 
-function AvatarStackPlaceholder({ assigneeIds }: { assigneeIds: string[] }) {
-  if (assigneeIds.length === 0) return null;
+function AvatarStack({
+  userIds,
+  userMap,
+}: {
+  userIds: string[];
+  userMap?: Record<string, { name: string }>;
+}) {
+  if (userIds.length === 0) return null;
+
+  // 이름 앞 글자만 추출 (예: "김민준" → "김"). userMap이 없으면 ID의 첫 글자로 fallback
+  const initial = (id: string) => {
+    const name = userMap?.[id]?.name;
+    return name ? name.trim().charAt(0) : id.slice(0, 1).toUpperCase();
+  };
+
   return (
     <div className="flex -space-x-1.5">
-      {assigneeIds.slice(0, 3).map((id, i) => (
+      {userIds.slice(0, 3).map((id) => (
         <div
           key={id}
-          className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-100 text-[10px] font-semibold text-blue-700 ring-2 ring-white"
+          title={userMap?.[id]?.name ?? id}
+          className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-100 text-[10px] font-semibold text-blue-700 ring-2 ring-white dark:bg-blue-950 dark:text-blue-300 dark:ring-slate-900"
         >
-          {id.replace("u", "U")}
+          {initial(id)}
         </div>
       ))}
-      {assigneeIds.length > 3 && (
-        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-200 text-[10px] font-medium text-slate-600 dark:text-slate-400 ring-2 ring-white">
-          +{assigneeIds.length - 3}
+      {userIds.length > 3 && (
+        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-200 text-[10px] font-medium text-slate-600 ring-2 ring-white dark:bg-slate-800 dark:text-slate-400 dark:ring-slate-900">
+          +{userIds.length - 3}
         </div>
       )}
     </div>

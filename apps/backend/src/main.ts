@@ -57,7 +57,8 @@ app.use(
     credentials: true,
   })
 );
-app.use(express.json({ limit: "10mb" }));
+// rawBody 저장: GitHub Webhook HMAC-SHA256 검증이 원본 바체를 근거로 해야 JSON 재시리얼라이즈 불일치를 막을 수 있다
+app.use(express.json({ limit: "10mb", verify: (req, _res, buf) => { (req as any).rawBody = buf; } }));
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan("combined"));
 

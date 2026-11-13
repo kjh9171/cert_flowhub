@@ -7,15 +7,24 @@ import { authMiddleware } from "../../middleware/auth";
 const router = Router();
 router.use(authMiddleware);
 
+// 첨부파일 검색 (파일명 매칭) - 통합 검색 4개 영역 중 하나
+async function searchFiles(q: string, workspaceId?: string) {
+  return prisma.attachment.findMany({
+    where: { fileName: { contains: q, mode: "insensitive" } },
+    select: { id: true, fileName: true, mimeType: true, fileUrl: true, createdAt: true },
+    take: 20,
+  });
+}
+
 // GET /api/search?q=&workspaceId=
 router.get("/", async (req, res, next) => {
   try {
     const q = String(req.query.q || "").trim();
     const workspaceId = req.query.workspaceId ? String(req.query.workspaceId) : undefined;
     if (!q) {
-      return res.json({ tasks: [], articles: [], posts: [] });
+      return res.json({ tasks: [], articles: [], posts: [], files: [] });
     }
-    const [tasks, articles, posts] = await Promise.all([
+    const [tasks, articles, posts, files] = await Promise.all([
       prisma.task.findMany({
         where: {
           ...(workspaceId ? { workspaceId } : {}),
@@ -49,8 +58,9 @@ router.get("/", async (req, res, next) => {
         select: { id: true, title: true, type: true, createdAt: true },
         take: 20,
       }),
+      searchFiles(q, workspaceId), // 첨부파일명 검색 추가
     ]);
-    res.json({ tasks, articles, posts });
+    res.json({ tasks, articles, posts, files });
   } catch (e) {
     next(e);
   }
@@ -61,7 +71,7 @@ router.get("/advanced", async (req, res, next) => {
   try {
     const q = String(req.query.q || "").trim();
     const workspaceId = req.query.workspaceId ? String(req.query.workspaceId) : null;
-    if (!q) return res.json({ tasks: [], articles: [], posts: [] });
+    if (!q) return res.json({ tasks: [], articles: [], posts: [], files: [] });
 
     const tsq = q.split(/\s+/).join(" & ");
 
@@ -99,7 +109,10 @@ router.get("/advanced", async (req, res, next) => {
       take: 20,
     });
 
-    res.json({ tasks, articles, posts });
+    // 첨부파일명 검색 ( 고급 검색에서도 동일하게 포함)
+    const files = await searchFiles(q, workspaceId ?? undefined);
+
+    res.json({ tasks, articles, posts, files });
   } catch (e) {
     next(e);
   }

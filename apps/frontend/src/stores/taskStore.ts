@@ -1,80 +1,9 @@
 // FlowHub 작업 전역 상태 (API + Socket 연동)
 
 import { create } from "zustand";
-import type { Task, TaskStatus } from "@/types";
+import type { Task, TaskStatus, IntegrationStatus, IntegrationEventType } from "@/types";
 import api from "@/lib/api";
 import { getSocket } from "@/lib/socket";
-
-const mockTasks: Task[] = [
-  {
-    id: "t1",
-    projectId: "p1",
-    workspaceId: "w1",
-    title: "로그인 페이지 UI 구현",
-    content: "Next.js App Router 기반 로그인 화면",
-    status: "IN_PROGRESS",
-    priority: "HIGH",
-    progress: 60,
-    startDate: "2026-11-01",
-    endDate: "2026-11-10",
-    authorId: "u1",
-    assigneeIds: ["u1", "u2"],
-    dependencyIds: [],
-    createdAt: "2026-10-28T00:00:00Z",
-    updatedAt: "2026-11-05T00:00:00Z",
-  },
-  {
-    id: "t2",
-    projectId: "p1",
-    workspaceId: "w1",
-    title: "Prisma 스키마 설계",
-    content: "DB 모델 정의",
-    status: "DONE",
-    priority: "URGENT",
-    progress: 100,
-    startDate: "2026-10-20",
-    endDate: "2026-10-27",
-    authorId: "u1",
-    assigneeIds: ["u1"],
-    dependencyIds: [],
-    createdAt: "2026-10-18T00:00:00Z",
-    updatedAt: "2026-10-27T00:00:00Z",
-  },
-  {
-    id: "t3",
-    projectId: "p1",
-    workspaceId: "w1",
-    title: "Socket.io 실시간 연동",
-    content: "Badge 업데이트 브로드캐스트",
-    status: "REQUESTED",
-    priority: "MEDIUM",
-    progress: 0,
-    startDate: "2026-11-12",
-    endDate: "2026-11-20",
-    authorId: "u2",
-    assigneeIds: ["u2"],
-    dependencyIds: ["t1"],
-    createdAt: "2026-11-01T00:00:00Z",
-    updatedAt: "2026-11-01T00:00:00Z",
-  },
-  {
-    id: "t4",
-    projectId: "p2",
-    workspaceId: "w1",
-    title: "지식 베이스 에디터",
-    content: "마크다운 WYSIWYG",
-    status: "PAUSED",
-    priority: "LOW",
-    progress: 30,
-    startDate: "2026-11-05",
-    endDate: "2026-11-25",
-    authorId: "u1",
-    assigneeIds: ["u3"],
-    dependencyIds: [],
-    createdAt: "2026-11-02T00:00:00Z",
-    updatedAt: "2026-11-06T00:00:00Z",
-  },
-];
 
 function mapApiTask(t: any): Task {
   return {
@@ -94,6 +23,10 @@ function mapApiTask(t: any): Task {
     dependencyIds: (t.dependencies || []).map((d: any) => d.dependsOnTaskId),
     createdAt: t.createdAt,
     updatedAt: t.updatedAt,
+    position: typeof t.position === "number" ? t.position : undefined,
+    badges: Array.isArray(t.badges)
+      ? t.badges.map((b: any) => ({ status: b.status, eventType: b.eventType }))
+      : undefined,
   };
 }
 
@@ -105,13 +38,26 @@ interface TaskState {
   loadTasks: (params?: Record<string, string>) => Promise<void>;
   updateTask: (id: string, patch: Partial<Task>) => Promise<void>;
   moveTaskStatus: (id: string, status: TaskStatus) => Promise<void>;
+  /** 현재 사용자/워크스페이스의 최신 연동 Badge 목록 (실시간 갱신) */
+  badges: Array<{ status: IntegrationStatus; eventType: IntegrationEventType }>;
+  loadBadges: () => Promise<void>;
   subscribeSocket: () => () => void;
 }
 
 export const useTaskStore = create<TaskState>((set, get) => ({
-  tasks: mockTasks,
+  tasks: [],
   view: "KANBAN",
   loading: false,
+  badges: [],
+  loadBadges: async () => {
+    try {
+      const res = await api.get("/integrations/badges", { params: { limit: 6 } });
+      const list = (res.data || []).map((b: any) => ({ status: b.status, eventType: b.eventType }));
+      set({ badges: list });
+    } catch {
+      /* API 미실행 시 빈 상태로 유지 */
+    }
+  },
   setView: (v) => set({ view: v }),
   loadTasks: async (params) => {
     set({ loading: true });
@@ -119,7 +65,7 @@ export const useTaskStore = create<TaskState>((set, get) => ({
       const res = await api.get("/tasks", { params });
       set({ tasks: (res.data || []).map(mapApiTask), loading: false });
     } catch {
-      // fallback to mock data
+      // API 오류 시 이전 목록 유지
       set({ loading: false });
     }
   },
@@ -151,6 +97,15 @@ export const useTaskStore = create<TaskState>((set, get) => ({
   },
   subscribeSocket: () => {
     const s = getSocket();
+    // 연동 Badge 실시간 갱신 (GitHub/CI/CD/외부 API 상태 변경)
+    const badgeHandler = (payload: any) => {
+      if (payload?.status && payload?.eventType) {
+        set((state) => ({
+          badges: [{ status: payload.status, eventType: payload.eventType }, ...state.badges].slice(0, 8),
+        }));
+      }
+    };
+    s.on("badge:updated", badgeHandler);
     const handler = (payload: any) => {
       if (payload?.action === "updated" && payload.task) {
         const mapped = mapApiTask(payload.task);
@@ -169,6 +124,9 @@ export const useTaskStore = create<TaskState>((set, get) => ({
       }
     };
     s.on("task:updated", handler);
-    return () => s.off("task:updated", handler);
+    return () => {
+      s.off("task:updated", handler);
+      s.off("badge:updated", badgeHandler);
+    };
   },
 }));

@@ -20,7 +20,8 @@ export async function createNotification(params: {
         link: params.link,
       },
     });
-    io?.emit("notification:new", n);
+    // 해당 사용자의 소켓 룸으로만 전송 (접속 중일 때만 실시간 수신, 오프라인 시 DB 조회로 복구)
+    io?.to(`user:${params.userId}`).emit("notification:new", n);
     return n;
   } catch (e) {
     console.error("[notify] failed", e);

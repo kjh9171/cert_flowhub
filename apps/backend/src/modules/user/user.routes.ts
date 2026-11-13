@@ -4,6 +4,7 @@ import { Router } from "express";
 import prisma from "../../lib/prisma";
 import { authMiddleware } from "../../middleware/auth";
 import { HttpError } from "../../middleware/error";
+import { io } from "../../realtime/socket";
 
 const router = Router();
 
@@ -45,7 +46,8 @@ router.patch("/me/status", authMiddleware, async (req, res, next) => {
       data: { status, statusMessage },
       select: { id: true, status: true, statusMessage: true },
     });
-    // Socket broadcast는 main에서 처리 (여기선 DB만)
+    // 상태 변경을 모든 접속 클라이언트(팀 페이지/접속자 카드)에 실시간 브로드캐스트
+    io?.emit("user:status", { userId: user.id, status: user.status, statusMessage: user.statusMessage });
     res.json(user);
   } catch (e) {
     next(e);

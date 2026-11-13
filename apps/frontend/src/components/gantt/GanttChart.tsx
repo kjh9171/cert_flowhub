@@ -22,6 +22,10 @@ const Gantt = dynamic(() => import("gantt-task-react").then((m) => m.Gantt), {
 interface GanttChartProps {
   tasks: AppTask[];
   onTaskClick?: (task: AppTask) => void;
+  /** 바를 드래그해 기간을 수정했을 때 (시작일/마감일 저장) */
+  onDateChange?: (id: string, start: Date, end: Date) => void;
+  /** 바 끝단을 드래그해 진척도를 변경했을 때 */
+  onProgressChange?: (id: string, progress: number) => void;
 }
 
 function toGanttTasks(tasks: AppTask[]) {
@@ -52,7 +56,7 @@ function toGanttTasks(tasks: AppTask[]) {
   return list;
 }
 
-export function GanttChart({ tasks, onTaskClick }: GanttChartProps) {
+export function GanttChart({ tasks, onTaskClick, onDateChange, onProgressChange }: GanttChartProps) {
   const [viewMode, setViewMode] = useState<ViewMode>(ViewMode.Day);
   const ganttTasks = useMemo(() => toGanttTasks(tasks), [tasks]);
 
@@ -94,8 +98,15 @@ export function GanttChart({ tasks, onTaskClick }: GanttChartProps) {
         <Gantt
           tasks={ganttTasks}
           viewMode={viewMode}
-          onDateChange={() => {}}
-          onProgressChange={() => {}}
+          onDateChange={(task: any) => {
+            // 기간 드래그 수정 → task 객체에 시작일/마감일이 이미 반영됨 (0.3.x API)
+            onDateChange?.(task.id, task.start, task.end);
+          }}
+          onProgressChange={(task: any) => {
+            // 바 끝단 드래그 → 진척도 반영 (task.progress: 0~1 또는 0~100)
+            const p = task.progress;
+            onProgressChange?.(task.id, Math.round(p <= 1 ? p * 100 : p));
+          }}
           onDoubleClick={(task: any) => {
             const found = tasks.find((t) => t.id === task.id);
             if (found) onTaskClick?.(found);

@@ -3,11 +3,37 @@
 import { Router } from "express";
 import prisma from "../../lib/prisma";
 import { authMiddleware } from "../../middleware/auth";
-import { createNotification } from "../../lib/notify";
+import { createNotification, notifyMany } from "../../lib/notify";
 import { HttpError } from "../../middleware/error";
 
 const router = Router();
 router.use(authMiddleware);
+
+// ── 멘션 처리: 콘텐츠 내 @이름 추출 → Mention 레코드 생성 + 멘션 대상자에게 실시간 알림
+async function handleMentions(content: string, authorId: string, opts: { postId?: string; commentId?: string }) {
+  if (!content) return;
+  const users = await prisma.user.findMany({ select: { id: true, name: true } });
+  const mentioned = new Map<string, string>(); // userId → 이름 (중복 제거)
+  const re = /@([\p{L}\d_-]+)/gu; // 한글/영문 닉네임 지원
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(content))) {
+    const u = users.find((x) => x.name === m![1]);
+    if (u && u.id !== authorId) mentioned.set(u.id, u.name); // 작성자 본인 제외
+  }
+  if (!mentioned.size) return;
+
+  await prisma.mention.createMany({
+    data: [...mentioned.keys()].map((uid) => ({ userId: uid, postId: opts.postId ?? null, commentId: opts.commentId ?? null })),
+  });
+
+  const authorName = (await prisma.user.findUnique({ where: { id: authorId }, select: { name: true } }))?.name ?? "알 수 없음";
+  await notifyMany([...mentioned.keys()], {
+    type: "FEED_MENTION", // NotificationType enum — FEED_MENTION(피드 멘션)
+    title: `${authorName} 님이 멘션했습니다`,
+    body: content.slice(0, 100),
+    link: "/feed",
+  });
+}
 
 // GET /api/feed?workspaceId=&projectId=
 router.get("/", async (req, res, next) => {
@@ -46,6 +72,8 @@ router.post("/", async (req, res, next) => {
       },
       include: { author: { select: { id: true, name: true, avatarUrl: true } } },
     });
+    // 멘션된 사용자에게 알림 (게시글 본문 내 @이름)
+    await handleMentions(content, req.user!.userId, { postId: post.id });
     res.status(201).json(post);
   } catch (e) {
     next(e);
@@ -111,6 +139,8 @@ router.post("/:id/comments", async (req, res, next) => {
       },
       include: { author: { select: { id: true, name: true, avatarUrl: true } } },
     });
+    // 멘션된 사용자에게 알림 (댓글 내 @이름)
+    await handleMentions(content, req.user!.userId, { postId: req.params.id, commentId: comment.id });
     // 게시글 작성자에게 알림 (댓글 작성자 제외)
     const post = await prisma.feedPost.findUnique({ where: { id: req.params.id }, select: { authorId: true, title: true } });
     if (post && post.authorId !== req.user!.userId) {

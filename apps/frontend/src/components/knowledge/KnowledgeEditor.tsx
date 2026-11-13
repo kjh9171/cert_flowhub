@@ -61,35 +61,35 @@ export function KnowledgeEditor({
   return (
     <div className="flex h-full flex-col rounded-lg border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
       {/* Toolbar */}
-      <div className="flex items-center justify-between border-b border-slate-200 px-4 py-2.5 dark:border-slate-800">
-        <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 px-4 py-2.5 dark:border-slate-800">
+        <div className="flex min-w-0 items-center gap-2">
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="문서 제목"
-            className="text-lg font-semibold text-slate-900 dark:text-slate-100 placeholder:text-slate-300 focus:outline-none"
+            className="min-w-0 bg-transparent text-lg font-semibold text-slate-900 placeholder:text-slate-300 focus:outline-none dark:text-slate-100 dark:placeholder:text-slate-600"
           />
           <Badge color={vis === "PERSONAL" ? "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400" : "bg-green-100 text-green-700"}>
             {vis === "PERSONAL" ? "개인" : vis === "TEAM" ? "팀" : "공개"}
           </Badge>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="inline-flex rounded-md border border-slate-200 dark:border-slate-800 bg-slate-50 p-0.5">
+        <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+          <div className="inline-flex rounded-md border border-slate-200 dark:border-slate-800 bg-slate-50 p-0.5 dark:bg-slate-800">
             <button
               onClick={() => setMode("edit")}
-              className={cn("rounded px-2.5 py-1 text-xs", mode === "edit" ? "bg-white dark:bg-slate-900 shadow-sm text-slate-900 dark:text-slate-100" : "text-slate-500 dark:text-slate-400")}
+              className={cn("shrink-0 whitespace-nowrap rounded px-2.5 py-1 text-xs", mode === "edit" ? "bg-white shadow-sm text-slate-900 dark:bg-slate-900 dark:text-slate-100" : "text-slate-500 dark:text-slate-400")}
             >
               <Edit3 className="inline h-3.5 w-3.5 mr-1" />편집
             </button>
             <button
               onClick={() => setMode("preview")}
-              className={cn("rounded px-2.5 py-1 text-xs", mode === "preview" ? "bg-white dark:bg-slate-900 shadow-sm text-slate-900 dark:text-slate-100" : "text-slate-500 dark:text-slate-400")}
+              className={cn("shrink-0 whitespace-nowrap rounded px-2.5 py-1 text-xs", mode === "preview" ? "bg-white shadow-sm text-slate-900 dark:bg-slate-900 dark:text-slate-100" : "text-slate-500 dark:text-slate-400")}
             >
               <Eye className="inline h-3.5 w-3.5 mr-1" />미리보기
             </button>
             <button
               onClick={() => setMode("split")}
-              className={cn("rounded px-2.5 py-1 text-xs", mode === "split" ? "bg-white dark:bg-slate-900 shadow-sm text-slate-900 dark:text-slate-100" : "text-slate-500 dark:text-slate-400")}
+              className={cn("shrink-0 whitespace-nowrap rounded px-2.5 py-1 text-xs", mode === "split" ? "bg-white shadow-sm text-slate-900 dark:bg-slate-900 dark:text-slate-100" : "text-slate-500 dark:text-slate-400")}
             >
               분할
             </button>

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { UserStatusBadge } from "@/components/badge/UserStatusBadge";
 import { useUserStore } from "@/stores/userStore";
+import { disconnectSocket } from "@/lib/socket";
 import type { UserStatus } from "@/types";
 
 export default function SettingsPage() {
@@ -42,6 +43,8 @@ export default function SettingsPage() {
   };
 
   const logout = () => {
+    // 소켓 연결을 먼저 종료(서버 presence OFFLINE 발행) 후 토큰 제거
+    disconnectSocket();
     localStorage.removeItem("flowhub_token");
     window.location.href = "/login";
   };

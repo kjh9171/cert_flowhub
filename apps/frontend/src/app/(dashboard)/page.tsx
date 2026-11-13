@@ -3,7 +3,7 @@
 // FlowHub 대시보드 홈
 
 import React, { useEffect, useState } from "react";
-import { LayoutDashboard, Kanban, BookOpen, Users, Bell, CheckCircle2, Plus } from "lucide-react";
+import { Kanban, Users, Bell, CheckCircle2, Plus } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 import { useTaskStore } from "@/stores/taskStore";
@@ -18,35 +18,12 @@ import { FeedPostCard } from "@/components/feed/FeedPostCard";
 import { useLayoutStore } from "@/stores/layoutStore";
 import { TaskCreateModal } from "@/components/task/TaskCreateModal";
 import { TaskDetailPanel } from "@/components/task/TaskDetailPanel";
+import api from "@/lib/api";
 import type { FeedPost, User } from "@/types";
 
-const mockPosts: FeedPost[] = [
-  {
-    id: "fp1",
-    workspaceId: "w1",
-    authorId: "u1",
-    type: "ANNOUNCEMENT",
-    title: "FlowHub 개발 킥오프",
-    content: "## 환영합니다\nFlowHub 통합 협업 플랫폼 개발을 시작합니다. **모두 화이팅!**",
-    isPinned: true,
-    createdAt: "2026-11-10T09:00:00Z",
-  },
-  {
-    id: "fp2",
-    workspaceId: "w1",
-    projectId: "p1",
-    authorId: "u2",
-    type: "SHARE",
-    content: "Prisma 스키마 초안 공유합니다. 리뷰 부탁드립니다.",
-    isPinned: false,
-    createdAt: "2026-11-09T14:30:00Z",
-  },
-];
-
-const mockUsers: Record<string, User> = {
-  u1: { id: "u1", name: "홍길동", email: "hong@flowhub.local", role: "ADMIN", status: "ONLINE" },
-  u2: { id: "u2", name: "김철수", email: "kim@flowhub.local", role: "MEMBER", status: "BUSY" },
-};
+// Date → YYYY-MM-DD (로컬 기준, 타임존 오차 방지)
+const fmtDate = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 
 export default function DashboardPage() {
   const { tasks, view, setView, loadTasks, subscribeSocket } = useTaskStore();
@@ -55,31 +32,74 @@ export default function DashboardPage() {
     const unsub = subscribeSocket();
     return unsub;
   }, [loadTasks, subscribeSocket]);
+
   const { currentUser } = useUserStore();
   const { openRightPanel } = useLayoutStore();
   const [modalOpen, setModalOpen] = useState(false);
   const reload = () => loadTasks();
 
+  // 실제 API 데이터 — 멤버/미읽음 알림/최신 연동 Badge/최근 피드
+  const [memberCount, setMemberCount] = useState(0);
+  const [usersMap, setUsersMap] = useState<Record<string, User>>({});
+  const [userMap, setUserMap] = useState<Record<string, { name: string }>>({});
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [latestBadge, setLatestBadge] = useState<any | null>(null);
+  const [feedPosts, setFeedPosts] = useState<FeedPost[]>([]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const [u, n, b, f] = await Promise.all([
+          api.get("/users"),
+          api.get("/notifications"),
+          api.get("/integrations/badges", { params: { limit: 1 } }),
+          api.get("/feed", { params: { limit: 5 } }),
+        ]);
+        const users: User[] = u.data || [];
+        setMemberCount(users.length);
+        const uMap: Record<string, User> = {};
+        const nMap: Record<string, { name: string }> = {};
+        users.forEach((x) => {
+          uMap[x.id] = x;
+          nMap[x.id] = { name: x.name };
+        });
+        setUsersMap(uMap);
+        setUserMap(nMap);
+
+        const notifs: any[] = Array.isArray(n.data) ? n.data : (n.data?.items ?? n.data?.notifications ?? []);
+        setUnreadCount(notifs.filter((x) => !x.isRead).length);
+
+        const badges: any[] = Array.isArray(b.data) ? b.data : (b.data?.items ?? []);
+        setLatestBadge(badges[0] ?? null);
+
+        const posts: any[] = Array.isArray(f.data) ? f.data : (f.data?.items ?? f.data?.posts ?? []);
+        setFeedPosts(posts.slice(0, 5));
+      } catch {
+        /* API 미실행 시 0/빈 상태로 표시 */
+      }
+    })();
+  }, []);
+
   const stats = [
     { label: "진행 중 작업", value: tasks.filter((t) => t.status === "IN_PROGRESS").length, icon: Kanban, color: "text-blue-600" },
     { label: "완료 작업", value: tasks.filter((t) => t.status === "DONE").length, icon: CheckCircle2, color: "text-green-600" },
-    { label: "팀 멤버", value: 8, icon: Users, color: "text-purple-600" },
-    { label: "미읽음 알림", value: 5, icon: Bell, color: "text-amber-600" },
+    { label: "팀 멤버", value: memberCount, icon: Users, color: "text-purple-600" },
+    { label: "미읽음 알림", value: unreadCount, icon: Bell, color: "text-amber-600" },
   ];
 
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 dark:text-white">대시보드</h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">대시보드</h1>
+          <p className="truncate text-sm text-slate-500 dark:text-slate-400">
             안녕하세요, {currentUser?.name}님. 오늘도 좋은 하루 되세요.
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 sm:gap-3">
           {currentUser && <UserStatusBadge status={currentUser.status} showLabel />}
-          <IntegrationBadge status="IN_PROGRESS" eventType="CI_CD" title="CI/CD 빌드" />
+          {latestBadge && <IntegrationBadge status={latestBadge.status} eventType={latestBadge.eventType} title={latestBadge.title} targetUrl={latestBadge.targetUrl} size="sm" />}
           <Button size="sm" onClick={() => setModalOpen(true)}>
             <Plus className="h-4 w-4" /> 새 작업
           </Button>
@@ -87,21 +107,21 @@ export default function DashboardPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
         {stats.map((s) => (
           <div key={s.label} className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-slate-500 dark:text-slate-400">{s.label}</p>
-              <s.icon className={cn("h-5 w-5", s.color)} />
+            <div className="flex items-center justify-between gap-2">
+              <p className="truncate whitespace-nowrap text-xs text-slate-500 dark:text-slate-400 sm:text-sm">{s.label}</p>
+              <s.icon className={cn("h-5 w-5 shrink-0", s.color)} />
             </div>
-            <p className="mt-2 text-3xl font-bold text-slate-900 dark:text-slate-100 dark:text-white">{s.value}</p>
+            <p className="mt-2 text-3xl font-bold text-slate-900 dark:text-slate-100">{s.value}</p>
           </div>
         ))}
       </div>
 
       {/* View switcher */}
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100 dark:text-white">작업</h2>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">작업</h2>
         <ViewSwitcher value={view} onChange={setView} />
       </div>
 
@@ -109,6 +129,7 @@ export default function DashboardPage() {
       {view === "KANBAN" && (
         <KanbanBoard
           tasks={tasks}
+          userMap={userMap}
           onStatusChange={(id, status) => useTaskStore.getState().moveTaskStatus(id, status)}
           onTaskClick={(t) =>
             openRightPanel(<TaskDetailPanel task={t} onUpdated={reload} />)
@@ -123,6 +144,10 @@ export default function DashboardPage() {
             onTaskClick={(t) =>
               openRightPanel(<TaskDetailPanel task={t} onUpdated={reload} />)
             }
+            onDateChange={(id, start, end) =>
+              useTaskStore.getState().updateTask(id, { startDate: fmtDate(start), endDate: fmtDate(end) })
+            }
+            onProgressChange={(id, progress) => useTaskStore.getState().updateTask(id, { progress })}
           />
         </div>
       )}
@@ -136,20 +161,26 @@ export default function DashboardPage() {
       )}
       {view === "FEED" && (
         <div className="space-y-4">
-          {mockPosts.map((p) => (
-            <FeedPostCard key={p.id} post={p} author={mockUsers[p.authorId]} />
+          {feedPosts.map((p: any) => (
+            <FeedPostCard key={p.id} post={p} author={usersMap[p.authorId] ?? p.author} />
           ))}
+          {feedPosts.length === 0 && (
+            <p className="rounded-lg border border-dashed p-6 text-center text-sm text-slate-400">아직 피드가 없습니다. 작업을 공유해 보세요.</p>
+          )}
         </div>
       )}
 
       {/* Recent feed */}
       {view !== "FEED" && (
         <section>
-          <h2 className="mb-3 text-lg font-semibold text-slate-900 dark:text-slate-100 dark:text-white">최근 피드</h2>
+          <h2 className="mb-3 text-lg font-semibold text-slate-900 dark:text-slate-100">최근 피드</h2>
           <div className="space-y-4">
-            {mockPosts.map((p) => (
-              <FeedPostCard key={p.id} post={p} author={mockUsers[p.authorId]} />
+            {feedPosts.map((p: any) => (
+              <FeedPostCard key={p.id} post={p} author={usersMap[p.authorId] ?? p.author} />
             ))}
+            {feedPosts.length === 0 && (
+              <p className="rounded-lg border border-dashed border-slate-200 dark:border-slate-800 p-6 text-center text-sm text-slate-400">아직 피드가 없습니다. 첫 소식을 남겨보세요.</p>
+            )}
           </div>
         </section>
       )}

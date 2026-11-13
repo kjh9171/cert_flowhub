@@ -5,7 +5,7 @@
 import React, { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { MessageSquare, Share2, MoreHorizontal, Paperclip, Heart } from "lucide-react";
+import { MessageSquare, Share2, MoreHorizontal, Heart } from "lucide-react";
 import { cn, formatDate } from "@/lib/utils";
 import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
@@ -69,12 +69,6 @@ export function FeedPostCard({ post, author, onComment }: FeedPostCardProps) {
       {/* Content (Markdown) */}
       <div className="prose prose-sm max-w-none text-slate-700 dark:text-slate-300">
         <ReactMarkdown remarkPlugins={[remarkGfm]}>{post.content}</ReactMarkdown>
-      </div>
-
-      {/* Attachments placeholder */}
-      <div className="mt-3 flex items-center gap-2 text-xs text-slate-400">
-        <Paperclip className="h-3.5 w-3.5" />
-        첨부파일 0개
       </div>
 
       {/* Actions */}

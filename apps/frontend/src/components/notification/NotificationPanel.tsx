@@ -14,10 +14,20 @@ interface NotificationPanelProps {
 export function NotificationPanel({ onClose }: NotificationPanelProps) {
   const [items, setItems] = useState<Notification[]>([]);
 
+  // Esc 키로 닫기
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
   const load = async () => {
     try {
       const res = await api.get("/notifications");
-      setItems(res.data || []);
+      const list = Array.isArray(res.data) ? res.data : (res.data?.items ?? res.data?.notifications ?? []);
+      setItems(list);
     } catch {
       /* ignore */
     }
@@ -54,7 +64,10 @@ export function NotificationPanel({ onClose }: NotificationPanelProps) {
   };
 
   return (
-    <div className="fixed right-4 top-16 z-50 w-80 rounded-lg border border-slate-200 bg-white shadow-xl dark:border-slate-800 dark:bg-slate-900">
+    <>
+      {/* 바깥 클릭 시 닫기 (투명 백드롭) */}
+      <div className="fixed inset-0 z-40" onClick={onClose} aria-hidden="true" />
+      <div className="fixed right-4 top-16 z-50 w-80 rounded-lg border border-slate-200 bg-white shadow-xl dark:border-slate-800 dark:bg-slate-900">
       <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3 dark:border-slate-800">
         <div className="flex items-center gap-2">
           <Bell className="h-4 w-4 text-slate-600 dark:text-slate-400" />
@@ -94,6 +107,7 @@ export function NotificationPanel({ onClose }: NotificationPanelProps) {
           ))
         )}
       </div>
-    </div>
+      </div>
+    </>
   );
 }

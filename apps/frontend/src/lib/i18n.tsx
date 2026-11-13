@@ -7,6 +7,7 @@ type Lang = "ko" | "en";
 const messages: Record<Lang, Record<string, string>> = {
   ko: {
     dashboard: "대시보드",
+    feed: "피드",
     tasks: "작업",
     calendar: "캘린더",
     gantt: "간트",
@@ -19,6 +20,7 @@ const messages: Record<Lang, Record<string, string>> = {
   },
   en: {
     dashboard: "Dashboard",
+    feed: "Feed",
     tasks: "Tasks",
     calendar: "Calendar",
     gantt: "Gantt",

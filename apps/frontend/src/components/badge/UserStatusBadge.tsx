@@ -30,7 +30,7 @@ export function UserStatusBadge({
 
   if (!interactive) {
     return (
-      <span className="inline-flex items-center gap-1.5">
+      <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
         <span className={cn("rounded-full", dotSize, userStatusColor[status])} />
         {showLabel && <span className="text-xs text-slate-600 dark:text-slate-400">{userStatusLabel[status]}</span>}
       </span>
@@ -41,7 +41,7 @@ export function UserStatusBadge({
     <div className="relative">
       <button
         onClick={() => setOpen((o) => !o)}
-        className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-2.5 py-1 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
+        className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-2.5 py-1 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
       >
         <span className={cn("rounded-full", dotSize, userStatusColor[status])} />
         {showLabel && userStatusLabel[status]}

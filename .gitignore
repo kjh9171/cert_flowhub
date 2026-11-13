@@ -40,3 +40,6 @@ Thumbs.db
 
 # Uploads
 uploads/
+
+# TypeScript incremental build info
+*.tsbuildinfo

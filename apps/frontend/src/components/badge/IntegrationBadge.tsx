@@ -50,7 +50,7 @@ export function IntegrationBadge({
   const content = (
     <span
       className={cn(
-        "inline-flex items-center rounded-full font-medium border",
+        "inline-flex items-center whitespace-nowrap rounded-full font-medium border",
         wrapper,
         st === "SUCCESS" && "border-green-200 bg-green-50 text-green-700",
         st === "IN_PROGRESS" && "border-blue-200 bg-blue-50 text-blue-700",

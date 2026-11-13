@@ -1,0 +1,6 @@
+# 로컬 node_modules (pnpm 심볼릭 링크) 제외 - deps 단계에서 npm install로 재설치
+node_modules
+# 빌드 산출물 (빌더 단계에서 재생성)
+dist
+*.log
+.env

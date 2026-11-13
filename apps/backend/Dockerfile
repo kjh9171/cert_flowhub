@@ -28,4 +28,5 @@ COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 EXPOSE 4000
 ENTRYPOINT ["docker-entrypoint.sh"]
-CMD ["sh", "-c", "npx prisma db push --accept-data-loss --skip-generate; node dist/main.js"]
+# 스키마 동기화 → 데모 데이터 시드(멱등: 이미 존재하면 즉시 종료) → 서버 기동
+CMD ["sh", "-c", "npx prisma db push --accept-data-loss --skip-generate && (node prisma/seed.mjs || echo '[entrypoint] seed skipped') && node dist/main.js"]

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { Search, X, FileText, CheckSquare, MessageSquare, File } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Modal } from "@/components/ui/Modal";
@@ -11,6 +12,8 @@ interface SearchResult {
   type: "task" | "document" | "feed" | "file";
   title: string;
   snippet: string;
+  /** 파일 검색 결과일 때 열기 링크 */
+  url?: string;
 }
 
 interface GlobalSearchProps {
@@ -19,8 +22,9 @@ interface GlobalSearchProps {
 }
 
 export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
+  const router = useRouter();
   const [query, setQuery] = useState("");
-  const [tab, setTab] = useState<"all" | "task" | "document" | "feed">("all");
+  const [tab, setTab] = useState<"all" | "task" | "document" | "feed" | "file">("all");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -48,6 +52,8 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
           ...(data.tasks || []).map((t: any) => ({ id: t.id, type: "task" as const, title: t.title, snippet: t.status })),
           ...(data.articles || []).map((a: any) => ({ id: a.id, type: "document" as const, title: a.title, snippet: a.category || a.visibility })),
           ...(data.posts || []).map((p: any) => ({ id: p.id, type: "feed" as const, title: p.title || "피드", snippet: p.type })),
+          // 첨부파일 검색 결과 (파일명 매칭) - 클릭 시 파일 열기
+          ...(data.files || []).map((f: any) => ({ id: f.id, type: "file" as const, title: f.fileName || "파일", snippet: f.mimeType || "", url: f.fileUrl })),
         ];
         setResults(mapped);
       } catch {
@@ -60,6 +66,14 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
   }, [query, open]);
 
   const filtered = tab === "all" ? results : results.filter((r) => r.type === tab);
+
+  // 결과 클릭 → 해당 페이지로 이동 (작업/문서는 쿼리 파라미터로 자동 선택)
+  const goTo = (r: SearchResult) => {
+    onClose();
+    if (r.type === "task") router.push(`/tasks?task=${r.id}`);
+    else if (r.type === "document") router.push(`/knowledge?article=${r.id}`);
+    else if (r.type === "feed") router.push("/feed");
+  };
 
   const typeIcon: Record<SearchResult["type"], React.ComponentType<{ className?: string }>> = {
     task: CheckSquare,
@@ -75,11 +89,12 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
     file: "파일",
   };
 
-  const tabs: { key: "all" | "task" | "document" | "feed"; label: string }[] = [
+  const tabs: { key: "all" | "task" | "document" | "feed" | "file"; label: string }[] = [
     { key: "all", label: "전체" },
     { key: "task", label: "작업" },
     { key: "document", label: "문서" },
     { key: "feed", label: "피드" },
+    { key: "file", label: "파일" },
   ];
 
   return (
@@ -124,12 +139,9 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
           ) : (
             filtered.map((r) => {
               const Icon = typeIcon[r.type];
-              return (
-                <button
-                  key={r.id}
-                  onClick={onClose}
-                  className="flex w-full items-start gap-3 rounded-md px-3 py-2.5 text-left hover:bg-slate-50 dark:hover:bg-slate-800"
-                >
+              // 파일 검색 결과는 클릭 시 새 탭에서 열기
+              const row = (
+                <>
                   <div className="mt-0.5 flex h-8 w-8 items-center justify-center rounded-md bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">
                     <Icon className="h-4 w-4" />
                   </div>
@@ -142,6 +154,15 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
                     </div>
                     <p className="truncate text-xs text-slate-400">{r.snippet}</p>
                   </div>
+                </>
+              );
+              return r.type === "file" && r.url ? (
+                <a key={r.id} href={r.url} target="_blank" rel="noopener noreferrer" className="flex w-full items-start gap-3 rounded-md px-3 py-2.5 text-left hover:bg-slate-50 dark:hover:bg-slate-800">
+                  {row}
+                </a>
+              ) : (
+                <button key={r.id} onClick={() => goTo(r)} className="flex w-full items-start gap-3 rounded-md px-3 py-2.5 text-left hover:bg-slate-50 dark:hover:bg-slate-800">
+                  {row}
                 </button>
               );
             })

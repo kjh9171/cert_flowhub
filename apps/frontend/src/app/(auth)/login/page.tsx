@@ -5,11 +5,13 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import api from "@/lib/api";
+import { useUserStore } from "@/stores/userStore";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("demo@flowhub.local");
-  const [password, setPassword] = useState("password123");
+  const setUser = useUserStore((s) => s.setUser);
+  const [email, setEmail] = useState("admin@flowhub.local");
+  const [password, setPassword] = useState("admin123");
   const [name, setName] = useState("");
   const [mode, setMode] = useState<"login" | "register">("login");
   const [error, setError] = useState("");
@@ -30,6 +32,8 @@ export default function LoginPage() {
       const body = mode === "login" ? { email, password } : { email, password, name: name || email.split("@")[0] };
       const res = await api.post(url, body);
       localStorage.setItem("flowhub_token", res.data.token);
+      // 로그인 응답의 실제 사용자 정보를 스토어에 반영 (하드코딩 기본값 제거)
+      if (res.data.user) setUser(res.data.user);
       router.push("/");
     } catch (err: any) {
       setError(err?.response?.data?.message || "요청 실패");
